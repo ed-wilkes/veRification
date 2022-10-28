@@ -24,7 +24,7 @@ app_ui <- function(request) {
       ,dashboardHeader(
         title = tags$a(
           href='http://www.github.com/ed-wilkes/veRification'
-          ,tags$img(src = 'www/logo-veRification.png', width = '65%')
+          ,tags$img(src = 'www/logo-veRification.png', width = '70%')
         )
       )
 
