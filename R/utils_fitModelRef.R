@@ -58,11 +58,13 @@ fitModelRef <- function(data
 
   } else {
 
+    sd_y <- sd(data[[col_value_1]])
     data$value <- data[[col_value_1]]
     fit <- rstanarm::stan_glm(
       form = value ~ 1
       ,data = data
       ,prior_intercept = normal(prior_mean, prior_var, autoscale = FALSE)
+      ,prior_aux = exponential(1 / sd_y, autoscale = FALSE)
       ,iter = 20000
       ,adapt_delta = 0.99
       ,seed = 123

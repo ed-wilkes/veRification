@@ -539,7 +539,7 @@ app_ui <- function(request) {
                     )
                     ,selectInput(
                       inputId = "var_option_ref"
-                      ,label = "What measure of variation is quoted for the reference material?"
+                      ,label = "What measure of uncertainty is quoted for the reference material?"
                       ,choices = c(
                         "Select a measure of variance" = ""
                         ,"SD"

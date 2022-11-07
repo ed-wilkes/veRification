@@ -106,7 +106,7 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n) {
     ,fluidRow(
       valueBox(
         value = bf
-        ,subtitle = paste0("Bayes factor against the null = ", prior_mean)
+        ,subtitle = paste0("Bayes factor against the null of ", prior_mean)
         ,color = colour_tested_two
         ,icon = icon(icon_tested_two)
         ,width = width

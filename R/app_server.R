@@ -630,12 +630,14 @@ app_server <- function(input, output, session) {
         session
         ,"col_rep_2_ref"
         ,choices = colnames(df_ref())
+        ,selected = ""
       )
     } else {
       updateSelectInput(
         session
         ,"col_rep_2_ref"
         ,choices = colnames(df_ref())
+        ,selected = ""
       )
     }
   })

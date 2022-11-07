@@ -62,8 +62,7 @@ calcCompTest <- function(data
 
     p_value <- format(round(test_obj$p.value, 3), nsmall = 3)
     stat <- format(round(test_obj$statistic, 1), nsmall = 1)
-    icon_tested <- ifelse(p_value < 0.05, yes = "triangle-exclamation", no = "circle-check")
-    colour_tested <- ifelse(p_value < 0.05, yes = "red", no = "green")
+    colour_tested <- "blue"
 
     # Generate value boxes
     boxes <- list(
@@ -92,7 +91,6 @@ calcCompTest <- function(data
           value = p_value
           ,subtitle = paste0(method, " P-value")
           ,color = colour_tested
-          ,icon = icon(icon_tested)
           ,width = 6
         )
       )
