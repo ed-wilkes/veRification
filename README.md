@@ -5,4 +5,4 @@ This app can be installed as an R package using the following command (requiring
 
 `devtools::install_github("ed-wilkes/veRification", dependencies = TRUE)`
 
-The app can then be run through the use of the `run_app()` function.
+The app can then be run through the use of the `veRification::run_app()` function.
