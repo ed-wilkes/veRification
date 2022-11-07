@@ -1488,8 +1488,6 @@ app_server <- function(input, output, session) {
       df_diag <- df_diagnostic()
     }
 
-    print(length(unique(df_diag[[input$col_diag_label]])))
-
     # Validation
     validate(
       need(
