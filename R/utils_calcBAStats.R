@@ -19,7 +19,7 @@ calcBAStats <- function(data
                         ,method) {
 
   # Average duplicates if present
-  if (!is.null(value_x2) && !is.null(value_y2)) {
+  if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
     data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
     data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
     value_x1 <- "mean_x" # change the name for future calculations
@@ -29,7 +29,10 @@ calcBAStats <- function(data
   if (method == "Absolute") {
     data[[paste0(method, " difference")]] <- data[[value_y1]] - data[[value_x1]]
   } else if (method == "Relative") {
-    data[[paste0(method, " difference")]] <- (data[[value_y1]] - data[[value_x1]]) / data[[value_x1]] * 100
+    data[[paste0(method, " difference")]] <- log2(data[[value_y1]]) - log2(data[[value_x1]])
+    nb_str <- "<i><br><font size='2'>NB: Relative differences are presented as log2 fold-ratios of the method 2 vs 1.
+    Thus a relative difference of 1 would mean that method 2 provides results double that (2^1) of method 1 and a
+    relative difference of -1 would mean that method 2 provides results half that (2^-1) of method 1.</font></i>"
   }
 
   # Calculate summary statistics
@@ -41,7 +44,7 @@ calcBAStats <- function(data
   sem_str <- paste0("<br><b>SEM (", tolower(method), " difference):</b><br>", format(round(sem_diff, 2), nsmall = 2))
 
   # Create text
-  text <- HTML(paste(mean_str, sd_str, sem_str, sep = "<br/>"))
+  text <- HTML(paste(mean_str, sd_str, sem_str, nb_str, sep = "<br/>"))
   return(text)
 
 }

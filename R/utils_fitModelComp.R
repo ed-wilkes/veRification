@@ -31,6 +31,8 @@ fitModelComp <- function(data
     data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
     data$sd_x <- apply(data[,c(value_x1, value_x2)], 1 , sd)
     data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd)
+    data$sd_x[which(data$sd_x == 0)] <- min(df$sd_x[df$sd_x > 0]) # replace zeros with arbitrarily minimum value
+    data$sd_y[which(data$sd_y == 0)] <- min(df$sd_y[df$sd_y > 0]) # replace zeros with arbitrarily minimum value
     value_x1 <- "mean_x"
     value_y1 <- "mean_y"
   }

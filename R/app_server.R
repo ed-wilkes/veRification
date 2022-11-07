@@ -933,22 +933,26 @@ app_server <- function(input, output, session) {
         session
         ,"col_ref_2"
         ,choices = colnames(df_comparison())
+        ,selected = ""
       )
       updateSelectInput(
         session
         ,"col_new_2"
         ,choices = colnames(df_comparison())
+        ,selected = ""
       )
     } else {
       updateSelectInput(
         session
         ,"col_ref_2"
         ,choices = colnames(df_comparison())
+        ,selected = ""
       )
       updateSelectInput(
         session
         ,"col_new_2"
         ,choices = colnames(df_comparison())
+        ,selected = ""
       )
     }
   })

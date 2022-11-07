@@ -26,6 +26,7 @@ fitModelEQA <- function(data
   if (!is.null(col_value_2) && col_value_2 != "") {
     data$mean_sample <- apply(data[,c(col_value_1, col_value_2)], 1, mean)
     data$sd_sample <- apply(data[,c(col_value_1, col_value_2)], 1, sd)
+    df$sd_sample[which(df$sd_sample == 0)] <- 1E-09 # replace zeros with arbitrarily small value
   } else {
     data$mean_sample <- data[[col_value_1]]
   }

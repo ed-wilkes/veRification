@@ -182,7 +182,7 @@ calcCompTest <- function(data
       ,fluidRow(
         valueBox(
           value = additive
-          ,subtitle = "Additive difference"
+          ,subtitle = "Additive difference (intercept)"
           ,color = colour_tested_one
           ,icon = icon(icon_tested_one)
           ,width = width
@@ -202,7 +202,7 @@ calcCompTest <- function(data
       ,fluidRow(
         valueBox(
           value = proportional
-          ,subtitle = "Proportional difference"
+          ,subtitle = "Proportional difference (slope)"
           ,color = colour_tested_two
           ,icon = icon(icon_tested_two)
           ,width = width

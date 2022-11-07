@@ -35,7 +35,7 @@ plotBlandAltman <- function(data
   if (method == "Absolute") {
     data$difference <- data[[value_y1]] - data[[value_x1]]
   } else if (method == "Relative") {
-    data$difference <- log2(data[[value_y1]]) - log2(data[[value_x1]])
+    data$difference <- (data[[value_y1]] - data[[value_x1]]) / data[[value_x1]] * 100
   }
 
   mean_diff <- mean(data$difference, na.rm = TRUE)
@@ -53,15 +53,14 @@ plotBlandAltman <- function(data
       alpha = 0.5
       ,aes(
         text = paste0(
-          x_name, ": ", round(!!sym(value_x1), 2), "\n"
-          ,y_name, ": ", round(!!sym(value_y1), 2), "\n"
+          "Mean value: ", round(!!sym(value_x1), 2), "\n"
           ,method, " difference: ", round(difference, 2)
         )
       )
     )+
     plotTheme(font_size = 12)+
     xlab(x_name)+
-    ylab(paste0(method, " difference (", y_name, " vs ", x_name,")"))+
+    ylab(paste0(method, " difference (", x_name, " vs ", y_name,")"))+
     expand_limits(x = 0)
 
   return(ggplotly(p, tooltip = "text", height = plot_height * 0.6))
