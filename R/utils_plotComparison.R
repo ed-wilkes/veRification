@@ -54,9 +54,9 @@ plotComparison <- function(data
     beta_0 <- model@glob.coef[1]
     beta_1 <- model@glob.coef[2]
 
-    p <- ggplot(data, aes(x = !!sym(value_x1), y = !!sym(value_y1)))+
-      geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
-      geom_point(
+    p <- ggplot2::ggplot(data, aes(x = !!sym(value_x1), y = !!sym(value_y1)))+
+      ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
+      ggplot2::geom_point(
         alpha = 0.5
         ,aes(
           text = paste0(
@@ -65,7 +65,7 @@ plotComparison <- function(data
           )
         )
       )+
-      geom_segment(
+      ggplot2::geom_segment(
         x = min_x
         ,xend = max_x
         ,y = beta_0 + beta_1 * min_x
@@ -73,18 +73,18 @@ plotComparison <- function(data
         ,colour = "dodgerblue2"
       )+
       plotTheme(font_size = 12)+
-      xlab(x_name)+
-      ylab(y_name)+
-      expand_limits(x = 0 , y = 0)
+      ggplot2::xlab(x_name)+
+      ggplot2::ylab(y_name)+
+      ggplot2::expand_limits(x = 0 , y = 0)
 
     if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
 
-      p <- p + geom_errorbar(
+      p <- p + ggplot2::geom_errorbar(
         aes(ymin = mean_y - sd_y, ymax = mean_y + sd_y)
         ,width = 0
         ,alpha = 0.5
       )+
-        geom_errorbarh(
+        ggplot2::geom_errorbarh(
           aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
           ,width = 0
           ,alpha = 0.5
@@ -95,15 +95,15 @@ plotComparison <- function(data
 
     p <- model %>%
       tidybayes::spread_draws(b_Intercept, !!sym(coef_str), ndraws = 100, seed = 1234) %>%
-      mutate(
+      dplyr::mutate(
         x = min_x
         ,xend = max_x
         ,y = b_Intercept + !!sym(coef_str) * x
         ,yend = b_Intercept + !!sym(coef_str) * xend
       ) %>%
-      ggplot()+
-      geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
-      geom_point(
+      ggplot2::ggplot()+
+      ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
+      ggplot2::geom_point(
         data = data
         ,aes(
           x = !!sym(value_x1)
@@ -115,21 +115,21 @@ plotComparison <- function(data
         )
         ,alpha = 0.5
       )+
-      geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
+      ggplot2::geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
       plotTheme(font_size = 12)+
-      xlab(x_name)+
-      ylab(y_name)+
-      expand_limits(x = 0 , y = 0)
+      ggplot2::xlab(x_name)+
+      ggplot2::ylab(y_name)+
+      ggplot2::expand_limits(x = 0 , y = 0)
 
     if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
 
-      p <- p + geom_errorbar(
+      p <- p + ggplot2::geom_errorbar(
         data = data
         ,aes(x = mean_x, ymin = mean_y - sd_y, ymax = mean_y + sd_y)
         ,width = 0
         ,alpha = 0.5
       )+
-        geom_errorbarh(
+        ggplot2::geom_errorbarh(
           data = data
           ,aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
           ,height = 0

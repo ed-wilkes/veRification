@@ -7,6 +7,7 @@
 #' @param value_x2 character string denoting column containing method 1 duplicate values
 #' @param value_y2 character string denoting column containing method 2 duplicate values
 #' @param coef_type character string denoting coefficient type
+#' @param ci_interval numeric CI interval
 #'
 #' @return HTML text summarising analysis
 #' @export
@@ -18,7 +19,8 @@ calcCompCor <- function(data
                         ,value_y1
                         ,value_x2 = NULL
                         ,value_y2 = NULL
-                        ,coef_type) {
+                        ,coef_type
+                        ,ci_interval) {
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "") {
@@ -40,6 +42,7 @@ calcCompCor <- function(data
       ,y = data[[value_y1]]
       ,use = "pairwise.complete.obs"
       ,method = "pearson"
+      ,conf.level = ci_interval / 100
     )
     cor_value <- format(round(as.numeric(cor_obj$estimate), 2), nsmall = 2)
     cor_lwr <- format(round(as.numeric(cor_obj$conf.int[1]), 2), nsmall = 2)
@@ -52,7 +55,7 @@ calcCompCor <- function(data
       x = data[[value_x1]]
       ,y = data[[value_y1]]
       ,use = "pairwise.complete.obs"
-      ,conf.level = 0.95
+      ,conf.level = ci_interval / 100
     )
     cor_value <- format(round(as.numeric(cor_obj[1]), 2), nsmall = 2)
     cor_lwr <- format(round(as.numeric(cor_obj[2]), 2), nsmall = 2)
@@ -64,7 +67,7 @@ calcCompCor <- function(data
     cor_obj <- DescTools::KendallTauB(
       x = data[[value_x1]]
       ,y = data[[value_y1]]
-      ,conf.level = 0.95
+      ,conf.level = ci_interval / 100
     )
     cor_value <- format(round(as.numeric(cor_obj[1]), 2), nsmall = 2)
     cor_lwr <- format(round(as.numeric(cor_obj[2]), 2), nsmall = 2)
@@ -73,7 +76,9 @@ calcCompCor <- function(data
   } else if (coef_type == "Bayesian") {
 
     letter <- "R2"
-    cor_obj <- brms::bayes_R2(model)[c(1,3:4)]
+    ci_lwr <- 0 + ((1 - (ci_interval / 100)) / 2)
+    ci_upr <- (ci_interval / 100) + ((1 - (ci_interval / 100)) / 2)
+    cor_obj <- brms::bayes_R2(model, probs = c(ci_lwr, ci_upr))[c(1,3:4)]
     cor_value <- format(round(as.numeric(cor_obj[1]), 2), nsmall = 2)
     cor_lwr <- format(round(as.numeric(cor_obj[2]), 2), nsmall = 2)
     cor_upr <- format(round(as.numeric(cor_obj[3]), 2), nsmall = 2)

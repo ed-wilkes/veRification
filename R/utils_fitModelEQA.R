@@ -26,7 +26,7 @@ fitModelEQA <- function(data
   if (!is.null(col_value_2) && col_value_2 != "") {
     data$mean_sample <- apply(data[,c(col_value_1, col_value_2)], 1, mean)
     data$sd_sample <- apply(data[,c(col_value_1, col_value_2)], 1, sd)
-    df$sd_sample[which(df$sd_sample == 0)] <- 1E-09 # replace zeros with arbitrarily small value
+    data$sd_sample[which(data$sd_sample == 0)] <- min(data$sd_sample[data$sd_sample > 0]) # replace zeros with arbitrarily minimum value
   } else {
     data$mean_sample <- data[[col_value_1]]
   }
@@ -86,7 +86,7 @@ fitModelEQA <- function(data
         ,data = data
         ,prior = c(
           prior(normal(0, 2.5 * sd_y), class = "b", coef = "Intercept")
-          ,prior(normal(1, 2.5 * (sd_y / sd_x)), class = "b", coef = "memeansd")
+          ,prior(lognormal(0, 1), class = "b", coef = "memeansd")
           ,prior(normal(mean_x, 2.5 * sd_x), class = "meanme")
           ,prior(exponential(0.5 / sd_x), class = "sdme")
           ,prior(exponential(1 / sd_y), class = "sigma")
@@ -109,7 +109,7 @@ fitModelEQA <- function(data
         ,data = data
         ,prior = c(
           prior(normal(0, 2.5 * sd_y), class = "b", coef = "Intercept")
-          ,prior(normal(1, 2.5 * (sd_y / sd_x)), class = "b", coef = "mean")
+          ,prior(lognormal(0, 1), class = "b", coef = "mean")
           ,prior(exponential(1 / sd_y), class = "sigma")
         )
         ,iter = 4000

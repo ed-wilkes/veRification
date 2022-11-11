@@ -9,6 +9,7 @@
 #' @param x_name character string denoting x-axis label
 #' @param y_name character string denoting y-axis label
 #' @param plot_height numeric plot height
+#' @param ci_interval numeric CI interval
 #'
 #' @return plotly object
 #' @export
@@ -22,7 +23,8 @@ plotBlandAltman <- function(data
                             ,value_y2 = NULL
                             ,x_name
                             ,y_name
-                            ,plot_height) {
+                            ,plot_height
+                            ,ci_interval) {
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
@@ -38,18 +40,19 @@ plotBlandAltman <- function(data
     data$difference <- log2(data[[value_y1]]) - log2(data[[value_x1]])
   }
 
+  ci_prob <- (ci_interval / 100) + ((1 - (ci_interval / 100)) / 2)
   mean_diff <- mean(data$difference, na.rm = TRUE)
   sd_diff <- sd(data$difference, na.rm = TRUE)
-  limit_upr <- mean_diff + 1.96 * sd_diff
-  limit_lwr <- mean_diff - 1.96 * sd_diff
+  limit_upr <- mean_diff + qnorm(ci_prob) * sd_diff
+  limit_lwr <- mean_diff - qnorm(ci_prob) * sd_diff
 
   # Plot data
-  p <- ggplot(data, aes(x = !!sym(value_x1), y = difference))+
-    geom_hline(yintercept = 0, alpha = 0.5, colour = "red2")+
-    geom_hline(yintercept = mean_diff, alpha = 0.5, linetype = "dashed", colour = "mediumorchid4")+
-    geom_hline(yintercept = limit_upr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
-    geom_hline(yintercept = limit_lwr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
-    geom_point(
+  p <- ggplot2::ggplot(data, aes(x = !!sym(value_x1), y = difference))+
+    ggplot2::geom_hline(yintercept = 0, alpha = 0.5, colour = "red2")+
+    ggplot2::geom_hline(yintercept = mean_diff, alpha = 0.5, linetype = "dashed", colour = "mediumorchid4")+
+    ggplot2::geom_hline(yintercept = limit_upr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
+    ggplot2::geom_hline(yintercept = limit_lwr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
+    ggplot2::geom_point(
       alpha = 0.5
       ,aes(
         text = paste0(
@@ -60,9 +63,9 @@ plotBlandAltman <- function(data
       )
     )+
     plotTheme(font_size = 12)+
-    xlab(x_name)+
-    ylab(paste0(method, " difference (", y_name, " vs ", x_name,")"))+
-    expand_limits(x = 0)
+    ggplot2::xlab(x_name)+
+    ggplot2::ylab(paste0(method, " difference (", y_name, " vs ", x_name,")"))+
+    ggplot2::expand_limits(x = 0)
 
   return(ggplotly(p, tooltip = "text", height = plot_height * 0.6))
 

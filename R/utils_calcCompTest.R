@@ -7,6 +7,7 @@
 #' @param value_x2 character string denoting column containing method 1 duplicate values
 #' @param value_y2 character string denoting column containing method 2 duplicate values
 #' @param method character string denoting test method
+#' @param ci_interval numeric CI interval
 #'
 #' @return list of shiny valueBoxes
 #' @export
@@ -18,7 +19,8 @@ calcCompTest <- function(data
                          ,value_y1
                          ,value_x2 = NULL
                          ,value_y2 = NULL
-                         ,method) {
+                         ,method
+                         ,ci_interval) {
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "") {
@@ -40,7 +42,7 @@ calcCompTest <- function(data
         x = data[[value_x1]]
         ,y = data[[value_y1]]
         ,paired = TRUE
-        ,conf.level = 0.95
+        ,conf.level = ci_interval / 100
       )
       centre_x <- mean(data[[value_x1]])
       centre_y <- mean(data[[value_y1]])
@@ -52,7 +54,7 @@ calcCompTest <- function(data
         x = data[[value_x1]]
         ,y = data[[value_y1]]
         ,paired = TRUE
-        ,conf.level = 0.95
+        ,conf.level = ci_interval / 100
       )
       centre_x <- median(data[[value_x1]])
       centre_y <- median(data[[value_y1]])
@@ -100,7 +102,7 @@ calcCompTest <- function(data
           ,tags$i(
             "NB: This P-value represents the probability of obtaining your results (or more extreme values), assuming
           that the null hypothesis (that the mean/median difference between the two methods'
-          results is equal to zero) is true"
+          results is equal to zero) is true."
           )
         )
       )
@@ -109,28 +111,30 @@ calcCompTest <- function(data
   } else {
 
     # Parameter values
+    ci_lwr <- 0 + ((1 - (ci_interval / 100)) / 2)
+    ci_upr <- 1 - ((1 - (ci_interval / 100)) / 2)
     additive <- paste0(
       format(round(median(as.matrix(model)[,1]), 2), nsmall = 2), " ("
-      ,format(round(quantile(as.matrix(model)[,1], 0.025), 2), nsmall = 2), ", "
-      ,format(round(quantile(as.matrix(model)[,1], 0.975), 2), nsmall = 2), ")"
+      ,format(round(quantile(as.matrix(model)[,1], ci_lwr), 2), nsmall = 2), ", "
+      ,format(round(quantile(as.matrix(model)[,1], ci_upr), 2), nsmall = 2), ")"
 
     )
 
     add_zero <- sum(as.matrix(model)[,1] > 0) / length(as.matrix(model)[,1])
     icon_tested_one <- ifelse(
-      add_zero > 0.95
+      add_zero > ci_upr
       ,yes = "triangle-exclamation"
       ,no = ifelse(
-        add_zero < 0.05
+        add_zero < ci_lwr
         ,yes = "triangle-exclamation"
         ,no = "circle-check"
       )
     )
     colour_tested_one <- ifelse(
-      add_zero > 0.95
+      add_zero > ci_upr
       ,yes = "red"
       ,no = ifelse(
-        add_zero < 0.05
+        add_zero < ci_lwr
         ,yes = "red"
         ,no = "green"
       )
@@ -138,25 +142,25 @@ calcCompTest <- function(data
 
     proportional <- paste0(
       format(round(median(as.matrix(model)[,2]),2), nsmall = 2), " ("
-      ,format(round(quantile(as.matrix(model)[,2], 0.025), 2), nsmall = 2), ", "
-      ,format(round(quantile(as.matrix(model)[,2], 0.975), 2), nsmall = 2), ")"
+      ,format(round(quantile(as.matrix(model)[,2], ci_lwr), 2), nsmall = 2), ", "
+      ,format(round(quantile(as.matrix(model)[,2], ci_upr), 2), nsmall = 2), ")"
     )
 
     prop_zero <- sum(as.matrix(model)[,2] > 1) / length(as.matrix(model)[,2])
     icon_tested_two <- ifelse(
-      prop_zero > 0.95
+      prop_zero > ci_upr
       ,yes = "triangle-exclamation"
       ,no = ifelse(
-        prop_zero < 0.05
+        prop_zero < ci_lwr
         ,yes = "triangle-exclamation"
         ,no = "circle-check"
       )
     )
     colour_tested_two <- ifelse(
-      prop_zero > 0.95
+      prop_zero > ci_upr
       ,yes = "red"
       ,no = ifelse(
-        prop_zero < 0.05
+        prop_zero < ci_lwr
         ,yes = "red"
         ,no = "green"
       )
@@ -192,8 +196,9 @@ calcCompTest <- function(data
         column(
           width = 12
           ,tags$i(
-            "NB: The numbers within parentheses represent the 95% credible interval for this parameter
-          based on a scaled, weakly informative prior distribution."
+            paste0("NB: The numbers within parentheses represent the ", ci_interval,
+                   "% credible interval for this parameter based on a scaled, weakly informative prior distribution."
+            )
           )
         )
       )
@@ -212,8 +217,9 @@ calcCompTest <- function(data
         column(
           width = 12
           ,tags$i(
-            "NB: The numbers within parentheses represent the 95% credible interval for this parameter
-          based on a scaled, weakly informative prior distribution."
+            paste0("NB: The numbers within parentheses represent the ", ci_interval,
+                   "% credible interval for this parameter based on a scaled, weakly informative prior distribution."
+            )
           )
         )
       )

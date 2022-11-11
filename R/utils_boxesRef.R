@@ -1,16 +1,17 @@
-#' Title
+#' boxesRef
 #'
 #' @param model rstanarm model object
 #' @param prior_mean numeric prior mean
 #' @param prior_var numeric prior SD/SEM/CV
 #' @param var_option character representing variance measure type
 #' @param prior_n numeric prior n
+#' @param ci_interval numeric CI interval
 #'
 #' @return list of shiny valueBoxes
 #' @export
 #'
 #' @examples
-boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n) {
+boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n, ci_interval) {
 
   # Convert SEM/CV to SD as necessary
   if (var_option == "SEM") {
@@ -33,27 +34,30 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n) {
   }
 
   # Summarise parameter values
+  ci_lwr <- 0 + ((1 - (ci_interval / 100)) / 2)
+  ci_upr <- 1 - ((1 - (ci_interval / 100)) / 2)
+
   summary <- paste0(
     format(round(median(as.matrix(model)[,1]), 2), nsmall = 2), " ("
-    ,format(round(quantile(as.matrix(model)[,1], 0.025), 2), nsmall = 2), ", "
-    ,format(round(quantile(as.matrix(model)[,1], 0.975), 2), nsmall = 2), ")"
+    ,format(round(quantile(as.matrix(model)[,1], ci_lwr), 2), nsmall = 2), ", "
+    ,format(round(quantile(as.matrix(model)[,1], ci_upr), 2), nsmall = 2), ")"
   )
 
   sum_zero <- sum(as.matrix(model)[,1] > prior_mean) / length(as.matrix(model)[,1])
   icon_tested_one <- ifelse(
-    sum_zero > 0.95
+    sum_zero > ci_upr
     ,yes = "triangle-exclamation"
     ,no = ifelse(
-      sum_zero < 0.05
+      sum_zero < ci_lwr
       ,yes = "triangle-exclamation"
       ,no = "circle-check"
     )
   )
   colour_tested_one <- ifelse(
-    sum_zero > 0.95
+    sum_zero > ci_upr
     ,yes = "red"
     ,no = ifelse(
-      sum_zero < 0.05
+      sum_zero < ci_lwr
       ,yes = "red"
       ,no = "green"
     )
@@ -95,9 +99,11 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n) {
       column(
         width = 12
         ,tags$i(
-          "NB: The numbers within parentheses represent the 95% credible interval
-          for the value of the measurand based on your measurements and the prior
-          distribution for the reference material."
+          paste0(
+          "NB: The numbers within parentheses represent the ", ci_interval, "%
+          credible interval for the value of the measurand based on your measurements
+          and the prior distribution for the reference material."
+          )
         )
       )
     )

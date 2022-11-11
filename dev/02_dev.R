@@ -40,6 +40,7 @@ usethis::use_package( "shinydashboardPlus" )
 usethis::use_package( "stringr" )
 usethis::use_package( "tidybayes" )
 usethis::use_package( "tidyr" )
+usethis::use_package( "yardstick" )
 
 ## Add internal datasets ----
 ## If you have data in your package

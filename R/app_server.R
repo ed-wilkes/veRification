@@ -139,67 +139,30 @@ app_server <- function(input, output, session) {
 
   })
 
-  # Plot(s)
-  output$plot_imprecision <- renderUI({
+  # Reactive values to store results
+  plot_output_prec <- reactiveValues(
+    plots = NULL # list of fluidRow -> box -> renderPlotly -> ggplotly objects
+    ,checks = NULL # list of fluidRow -> box -> renderPlot -> ggplot2 objects
+  )
+  fit_precision <- reactiveValues(
+    models = NULL # list of rstanarm model objects
+    ,boxes = NULL # list of fluidRow -> box
+  )
 
-    # Requirements to start processing
-    req(input$col_day, input$col_value, input$col_level)
-
-    qc_levels <- unique(df_precision()[[input$col_level]])
-    if (is.null(qc_levels)) {
-      qc_levels <- 1
-    }
-
-    # Plot imprecision data as boxplots
-    lapply(seq_along(qc_levels), function(i) {
-
-      if (!is.null(input$data_imprecision_rows_selected)) {
-        df_prec <- df_precision()[-input$data_imprecision_rows_selected, ]
-      } else {
-        df_prec <- df_precision()
-      }
-
-      # Checks
-      validate(
-        need(
-          expr = is.numeric(df_prec[[input$col_value]]) == TRUE
-          ,message = "The column in your data that represents your measurements does
-        not contain numbers. This may be because the column contains text or missing
-        values. Please check and reupload your data and/or reselect your columns."
-        )
-      )
-
-      fluidRow(
-        box(
-          title = paste0("QC level ", i)
-          ,collapsible = TRUE
-          ,solidHeader = TRUE
-          ,status = "primary"
-          ,renderPlotly(
-            plotPrecData(
-              data = df_prec
-              ,x_var = input$col_day
-              ,y_var = input$col_value
-              ,qc_level = i
-              ,col_level = input$col_level
-              ,analyte = input$analyte_precision
-            )
-          )
-        )
-      )
-
-    }) # ends lapply
-
+  # Listen to "run_model" input
+  toListenPrec <- reactive({
+    list(input$run_model_prec) # this is a list in case extra things need to be added later
   })
 
-  # brms model(s)
-  output$vca_results <- renderUI({
+  # Run if "run_model_prec" is pressed
+  observeEvent(toListenPrec(), {
 
     withProgress(message = "Fitting model(s), please wait...", {
 
       # Requirements before processing
       req(input$col_day, input$col_value, input$col_level)
 
+      # Get QC levels and claims
       qc_levels <- unique(df_precision()[[input$col_level]])
       if (is.null(qc_levels)) {
         qc_levels <- 1
@@ -221,60 +184,131 @@ app_server <- function(input, output, session) {
         claim_values <- NULL
       }
 
-      # Apply brms models to each level in data and return valueBoxes
-      lapply(seq_along(qc_levels), function(i) {
+      # Remove excluded rows
+      if (!is.null(input$data_imprecision_rows_selected)) {
+        df_prec <- df_precision()[-input$data_imprecision_rows_selected,]
+      } else {
+        df_prec <- df_precision()
+      }
 
-        if (!is.null(input$data_imprecision_rows_selected)) {
-          df <- df_precision()[-input$data_imprecision_rows_selected, ]
-        } else {
-          df <- df_precision()
-        }
-
-        # Validation
-        validate(
-          need(
-            expr = is.numeric(df[[input$col_value]]) == TRUE
-            ,message = "The column in your data that represents your measurements does
-            not contain numbers. This may be because the column contains text or missing
-            values. Please check and reupload your data and/or reselect your columns."
-          )
-          ,need(
-            expr = anyNA(df[[input$col_level]]) == FALSE
-            ,message = "The column in your data that represents the QC levels contains
-            missing values. Please check and reupload your data and/or reslect your
-            columns"
-          )
+      # Checks
+      validate(
+        need(
+          expr = is.numeric(df_prec[[input$col_value]]) == TRUE
+          ,message = "The column in your data that represents your measurements does
+        not contain numbers. This may be because the column contains text or missing
+        values. Please check and reupload your data and/or reselect your columns."
         )
+      )
 
-        #list(
+      # Update focus to plots tab
+      updateTabsetPanel(session, "precision_tabs", selected = "precision_tab_plots")
+
+      # Loop to plot data
+      plot_output_prec$plots <- lapply(seq_along(qc_levels), function(i) {
+
         fluidRow(
           box(
             title = paste0("QC level ", i)
-            ,solidHeader = TRUE
             ,collapsible = TRUE
+            ,solidHeader = TRUE
             ,status = "primary"
-            ,width = 12
-            ,fitModelPrec(
-              data = df
-              ,x_var = input$col_day
-              ,y_var = input$col_value
-              ,qc_level = i
-              ,col_level = input$col_level
-              ,colours = colour_values
-              ,test_claims = input$cv_claims_test
-              ,claims_data = claim_values
+            ,width = 9
+            ,plotly::renderPlotly(
+              plotPrecData(
+                data = df_prec
+                ,x_var = input$col_day
+                ,y_var = input$col_value
+                ,qc_level = i
+                ,col_level = input$col_level
+                ,analyte = input$analyte_precision
+              )
             )
           )
         )
 
-        # setProgress(i / length(qc_levels), "Fitting model(s), please wait...")
+      })
 
-      }) # ends lapply
+      # Loop to fit models
+      fit_precision$models <- lapply(seq_along(qc_levels), function(i) {
 
-      # setProgress(100, "Finishing...")
+        fitModelPrec(
+          data = df_prec
+          ,x_var = input$col_day
+          ,y_var = input$col_value
+          ,qc_level = i
+          ,col_level = input$col_level
+        )
+
+      })
+
+      # Loop to extract model info into boxes
+      fit_precision$boxes <- lapply(seq_along(qc_levels), function(i) {
+
+        fluidRow(
+          box(
+            title = paste0("QC level ", i)
+            ,collapsible = TRUE
+            ,solidHeader = TRUE
+            ,status = "primary"
+            ,width = 12
+            ,boxesPrec(
+              model = fit_precision$models[[i]]
+              ,x_var = input$col_day
+              ,colours = colour_values
+              ,qc_level = i
+              ,test_claims = input$cv_claims_test
+              ,claims_data = claim_values
+              ,ci_interval = input$ci_precision
+            )
+          )
+        )
+
+      })
+
+      # Loop to extract model checks
+      plot_output_prec$checks <- lapply(seq_along(qc_levels), function(i) {
+
+        check_plots <- modelChecks(
+          model = fit_precision$models[[i]]
+          ,model_type = "imprecision"
+        )
+
+        fluidRow(
+          box(
+            title = paste0("QC level ", i)
+            ,collapsible = TRUE
+            ,solidHeader = TRUE
+            ,status = "primary"
+            ,width = 12
+            ,column(
+              width = 6
+              ,renderPlot(check_plots[[1]])
+            )
+            ,column(
+              width = 6
+              ,renderPlot(check_plots[[2]])
+            )
+
+          )
+        )
+
+      })
 
     }) # ends withProgress
 
+  })
+
+  output$plots_precision <- renderUI({
+    plot_output_prec$plots
+  })
+
+  output$vca_results <- renderUI({
+    fit_precision$boxes
+  })
+
+  output$checks_precision <- renderUI({
+    plot_output_prec$checks
   })
 
   ## "Trueness (EQA)" tab ----
@@ -343,12 +377,14 @@ app_server <- function(input, output, session) {
         ,choices = "Bayesian posterior summary"
         ,selected = "Bayesian posterior summary"
       )
+      showTab(inputId = "trueness_tabs", target = "Bayesian model results")
     } else {
       updateSelectInput(
         session
         ,"stat_method_eqa"
         ,choices = c("Select a method" = "", "Paired t-test", "Paired Wilcoxon (Mann-Whitney) test")
       )
+      hideTab(inputId = "trueness_tabs", target = "Bayesian model results")
     }
   })
 
@@ -417,9 +453,8 @@ app_server <- function(input, output, session) {
     ,rownames = FALSE
   )
 
-  # Plots
   # Reactive values definition
-  plot_output_eqa <- reactiveValues(plot = NULL)
+  plot_output_eqa <- reactiveValues(plot = NULL, checks = NULL)
   fit_eqa <- reactiveValues(model = NULL, text_coef = NULL, text_cor = NULL, tests = NULL)
 
   # Listen to "run_model" input
@@ -452,9 +487,6 @@ app_server <- function(input, output, session) {
       if (input$reg_method_comp == "Deming") {
         req(input$var_x_eqa, input$var_y_eqa)
       }
-
-      # Update focus to regression analysis tab
-      updateTabsetPanel(session, "trueness_tabs", selected = "trueness_tab_plots")
 
       settings <- list(as.numeric(input$var_x_eqa), as.numeric(input$var_y_eqa))
 
@@ -520,6 +552,9 @@ app_server <- function(input, output, session) {
         )
       }
 
+      # Update focus to regression analysis tab
+      updateTabsetPanel(session, "trueness_tabs", selected = "trueness_tab_plots")
+
       # Fit measurement error model
       fit_eqa$model <- fitModelEQA(
         data = df_true
@@ -561,6 +596,7 @@ app_server <- function(input, output, session) {
         ,value_y1 = input$col_rep_1_trueness
         ,value_y2 = input$col_rep_2_trueness
         ,coef_type = input$cor_method_eqa
+        ,ci_interval = input$ci_trueness
       )
 
       # Perform statistical inference
@@ -571,7 +607,13 @@ app_server <- function(input, output, session) {
         ,value_y1 = input$col_rep_1_trueness
         ,value_y2 = input$col_rep_2_trueness
         ,method = input$stat_method_eqa
+        ,ci_interval = input$ci_trueness
       )
+
+      # Summarise model checks
+      if (input$reg_method_eqa == "Bayesian") {
+        plot_output_eqa$checks <- modelChecks(model = fit_eqa$model, model_type = "regression")
+      }
 
     }) # ends withProgress
 
@@ -600,6 +642,20 @@ app_server <- function(input, output, session) {
   # Statistical inferences
   output$trueness_test <- renderUI({
     fit_eqa$tests
+  })
+
+  # Model checks
+  output$mcmc_checks_trueness <- renderPlot({
+    plot_output_eqa$checks[[1]]
+  })
+  output$posteriors_checks_trueness <- renderPlot({
+    plot_output_eqa$checks[[2]]
+  })
+  output$mcmc_plot_trueness <- renderUI({
+    plotOutput("mcmc_checks_trueness", height = input$height * 0.8)
+  })
+  output$posteriors_plot_trueness <- renderUI({
+    plotOutput("posteriors_checks_trueness", height = input$height * 0.8)
   })
 
   ## "Trueness (reference)" tab ----
@@ -670,10 +726,15 @@ app_server <- function(input, output, session) {
   )
 
   # Reactive values definition
-  fit_ref <- reactiveValues(model = NULL)
+  fit_ref <- reactiveValues(model = NULL, checks = NULL)
+
+  # Listen to "run_model" input
+  toListenRef <- reactive({
+    list(input$run_model_ref) # this is a list in case extra things need to be added later
+  })
 
   # Model fitting
-  observe({
+  observeEvent(toListenRef(), {
 
     withProgress(message = "Fitting model, please wait...", {
 
@@ -749,6 +810,9 @@ app_server <- function(input, output, session) {
         )
       }
 
+      # Update focus to regression analysis tab
+      updateTabsetPanel(session, "ref_tabs", selected = "plots_ref")
+
       # Fit model to data
       fit_ref$model <- fitModelRef(
         data = df_reference
@@ -761,8 +825,12 @@ app_server <- function(input, output, session) {
         ,var_option = input$var_option_ref
       )
 
-      # Update focus to regression analysis tab
-      updateTabsetPanel(session, "ref_tabs", selected = "plots_ref")
+      # Model checks
+      if (input$col_rep_2_ref != "" && !is.null(input$col_rep_2_ref)) {
+        fit_ref$checks <- modelChecks(model = fit_ref$model, model_type = "reference_varying")
+      } else {
+        fit_ref$checks <- modelChecks(model = fit_ref$model, model_type = "reference")
+      }
 
     })
   })
@@ -854,6 +922,20 @@ app_server <- function(input, output, session) {
     plotOutput("plot_ref", height = input$height * 0.7)
   })
 
+  # Model checks
+  output$mcmc_checks_ref <- renderPlot({
+    fit_ref$checks[[1]]
+  })
+  output$posteriors_checks_ref <- renderPlot({
+    fit_ref$checks[[2]]
+  })
+  output$mcmc_plot_ref <- renderUI({
+    plotOutput("mcmc_checks_ref", height = input$height * 0.8)
+  })
+  output$posteriors_plot_ref <- renderUI({
+    plotOutput("posteriors_checks_ref", height = input$height * 0.8)
+  })
+
   # Generate boxes for model summaries
   output$trueness_ref_tests <- renderUI({
 
@@ -901,6 +983,7 @@ app_server <- function(input, output, session) {
       ,prior_var = input$var_ref
       ,prior_n = input$n_ref
       ,var_option = input$var_option_ref
+      ,ci_interval = input$ci_ref
     )
 
   })
@@ -965,12 +1048,14 @@ app_server <- function(input, output, session) {
         ,choices = "Bayesian posterior summary"
         ,selected = "Bayesian posterior summary"
       )
+      showTab(inputId = "comp_tabs", target = "Bayesian model results")
     } else {
       updateSelectInput(
         session
         ,"stat_method_comp"
         ,choices = c("Select a method" = "", "Paired t-test", "Paired Wilcoxon (Mann-Whitney) test")
       )
+      hideTab(inputId = "comp_tabs", target = "Bayesian model results")
     }
   })
 
@@ -1036,7 +1121,7 @@ app_server <- function(input, output, session) {
   )
 
   # Reactive values definition
-  plot_output_comp <- reactiveValues(plot = NULL)
+  plot_output_comp <- reactiveValues(plot = NULL, checks = NULL)
   fit_comp <- reactiveValues(model = NULL, text_coef = NULL, text_cor = NULL, tests = NULL)
 
   # Listen to "run_model" input
@@ -1135,6 +1220,7 @@ app_server <- function(input, output, session) {
         ,value_x2 = input$col_ref_2
         ,value_y1 = input$col_new_1
         ,value_y2 = input$col_new_2
+        ,ci_interval = input$ci_comparison
       )
 
       # Plot data from chosen model
@@ -1167,6 +1253,7 @@ app_server <- function(input, output, session) {
         ,value_y1 = input$col_new_1
         ,value_y2 = input$col_new_2
         ,coef_type = input$cor_method_comp
+        ,ci_interval = input$ci_comparison
       )
 
       # Perform statistical inference
@@ -1178,7 +1265,13 @@ app_server <- function(input, output, session) {
         ,value_y1 = input$col_new_1
         ,value_y2 = input$col_new_2
         ,method = input$stat_method_comp
+        ,ci_interval = input$ci_comparison
       )
+
+      # Model checks
+      if (input$reg_method_eqa == "Bayesian") {
+        plot_output_comp$checks <- modelChecks(model = fit_comp$model, model_type = "regression")
+      }
 
     }) # ends withProgress
 
@@ -1207,6 +1300,20 @@ app_server <- function(input, output, session) {
   # Statistical inferences
   output$comparison_test <- renderUI({
     fit_comp$tests
+  })
+
+  # Model checks
+  output$mcmc_checks_comparison <- renderPlot({
+    plot_output_comp$checks[[1]]
+  })
+  output$posteriors_checks_comparison <- renderPlot({
+    plot_output_comp$checks[[2]]
+  })
+  output$mcmc_plot_comparison <- renderUI({
+    plotOutput("mcmc_checks_comparison", height = input$height * 0.8)
+  })
+  output$posteriors_plot_comparison <- renderUI({
+    plotOutput("posteriors_checks_comparison", height = input$height * 0.8)
   })
 
   # Bland-Altman analysis
@@ -1269,6 +1376,7 @@ app_server <- function(input, output, session) {
       ,value_y2 = input$col_new_2
       ,x_name = input$method_comparison_1
       ,y_name = input$method_comparison_2
+      ,ci_interval = input$ci_comparison
       ,plot_height = window_height()
     )
 
@@ -1336,57 +1444,6 @@ app_server <- function(input, output, session) {
 
   })
 
-  ## Deprecated statistical testing for Bland-Altman analyses
-  ## These are better served by the Bayesian measurement error regression model
-  # output$altman_test <- renderUI({
-  #
-  #   if (!is.null(input$data_comparison_rows_selected)) {
-  #     df_comp <- df_comparison()[-input$data_comparison_rows_selected,]
-  #   } else {
-  #     df_comp <- df_comparison()
-  #   }
-  #
-  #   # Column checks
-  #   if (!is.numeric(df_comp[[input$col_ref_1]])) {
-  #     stop(
-  #       "The column in your data that represents the measurements for method 1 do not
-  #           consist of numbers. This may be because there are missing values or the column
-  #           contains text. Please check/edit your input data and try again."
-  #     )
-  #   }
-  #   if (!is.numeric(df_comp[[input$col_new_1]])) {
-  #     stop(
-  #       "The column in your data that represents the measurements for method 2 do not
-  #           consist of numbers. This may be because there are missing values or the column
-  #           contains text. Please check/edit your input data and try again."
-  #     )
-  #   }
-  #   if (input$duplicate_comparison == TRUE && !is.numeric(df_comp[[input$col_ref_2]])) {
-  #     stop(
-  #       "The column in your data that represents the duplicate measurements for method 1
-  #           do not consist of numbers. This may be because there are missing values or the
-  #           column contains text. Please check/edit your input data and try again."
-  #     )
-  #   }
-  #   if (input$duplicate_comparison == TRUE && !is.numeric(df_comp[[input$col_new_2]])) {
-  #     stop(
-  #       "The column in your data that represents the duplicate measurements for method 2
-  #           do not consist of numbers. This may be because there are missing values or the
-  #           column contains text. Please check/edit your input data and try again."
-  #     )
-  #   }
-  #
-  #   calcBATest(
-  #     data = df_comp
-  #     ,method = input$altman_method_comp
-  #     ,value_x1 = input$col_ref_1
-  #     ,value_x2 = input$col_ref_2
-  #     ,value_y1 = input$col_new_1
-  #     ,value_y2 = input$col_new_2
-  #   )
-  #
-  # })
-
   ## "Diagnostic" tab ----
   output$file_diagnostic <- reactive({
     return(!is.null(input$input_file_diagnostic))
@@ -1449,16 +1506,23 @@ app_server <- function(input, output, session) {
       ,input$positive_label
     )
 
-    # Update slider values based on input data
+    # Update slider values based on input data and automatically pick best threshold
     updateSliderInput(
       session
       ,"slider_threshold"
-      ,value = mean(df_diagnostic()[[input$col_diag_value]], na.rm = T)
+      ,value = optimThreshold(
+        data = df_diagnostic()
+        ,type = input$curve_type
+        ,value = input$col_diag_value
+        ,label = input$col_diag_label
+        ,positive = input$positive_label
+      )
       ,min = min(df_diagnostic()[[input$col_diag_value]], na.rm = T)
       ,max = max(df_diagnostic()[[input$col_diag_value]], na.rm = T)
-      ,step = nchar(
-        strsplit(as.character(df_diagnostic()[[input$col_diag_value]][1]), "\\.")
-      )[[1]][2]
+      # ,step = nchar(
+      #   strsplit(as.character(df_diagnostic()[[input$col_diag_value]][1]), "\\.")
+      # )[[1]][2]
+      ,step = round((max(df_diagnostic()[[input$col_diag_value]], na.rm = T) - min(df_diagnostic()[[input$col_diag_value]], na.rm = T))/100,1)
     )
   })
 
@@ -1596,6 +1660,7 @@ app_server <- function(input, output, session) {
       ,label = input$col_diag_label
       ,positive = input$positive_label
       ,threshold = input$slider_threshold
+      ,ci_interval = input$ci_diagnostic
     )
 
   })

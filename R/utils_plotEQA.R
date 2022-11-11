@@ -49,14 +49,14 @@ plotEQA <- function(data
     beta_0 <- model@glob.coef[1]
     beta_1 <- model@glob.coef[2]
 
-    p <- ggplot(data, aes(x = !!sym(col_mean), y = mean_sample))+
-      geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
-      geom_errorbarh(
+    p <- ggplot2::ggplot(data, aes(x = !!sym(col_mean), y = mean_sample))+
+      ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
+      ggplot2::geom_errorbarh(
         aes(y = mean_sample, xmin = !!sym(col_mean) - !!sym(col_var), xmax = !!sym(col_mean) + !!sym(col_var))
         ,height = 0
         ,alpha = 0.5
       )+
-      geom_point(
+      ggplot2::geom_point(
         alpha = 0.5
         ,aes(
           text = paste0(
@@ -65,7 +65,7 @@ plotEQA <- function(data
           )
         )
       )+
-      geom_segment(
+      ggplot2::geom_segment(
         x = min_x
         ,xend = max_x
         ,y = beta_0 + beta_1 * min_x
@@ -73,13 +73,13 @@ plotEQA <- function(data
         ,colour = "dodgerblue2"
       )+
       plotTheme(font_size = 12)+
-      xlab("EQA results")+
-      ylab("Measured values")+
-      expand_limits(x = 0 , y = 0)
+      ggplot2::xlab("EQA results")+
+      ggplot2::ylab("Measured values")+
+      ggplot2::expand_limits(x = 0 , y = 0)
 
     if (!is.null(col_value_2) && col_value_2 != "") {
 
-      p <- p + geom_errorbar(
+      p <- p + ggplot2::geom_errorbar(
         aes(ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
         ,width = 0
         ,alpha = 0.5
@@ -97,21 +97,21 @@ plotEQA <- function(data
 
     p <- model %>%
       tidybayes::spread_draws(b_Intercept, !!sym(coef_str), ndraws = 100, seed = 1234) %>%
-      mutate(
+      dplyr::mutate(
         x = min_x
         ,xend = max_x
         ,y = b_Intercept + !!sym(coef_str) * x
         ,yend = b_Intercept + !!sym(coef_str) * xend
       ) %>%
-      ggplot()+
-      geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
-      geom_errorbarh(
+      ggplot2::ggplot()+
+      ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
+      ggplot2::geom_errorbarh(
         data = data
         ,aes(y = mean_sample, xmin = !!sym(col_mean) - !!sym(col_var), xmax = !!sym(col_mean) + !!sym(col_var))
         ,height = 0
         ,alpha = 0.5
       )+
-      geom_point(
+      ggplot2::geom_point(
         data = data
         ,aes(
           x = mean
@@ -123,16 +123,16 @@ plotEQA <- function(data
         )
         ,alpha = 0.5
       )+
-      geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
+      ggplot2::geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
       plotTheme(font_size = 12)+
-      xlab("EQA results")+
-      ylab("Measured values")+
-      expand_limits(x = 0 , y = 0)
+      ggplot2::xlab("EQA results")+
+      ggplot2::ylab("Measured values")+
+      ggplot2::expand_limits(x = 0 , y = 0)
 
 
     if (!is.null(col_value_2) && col_value_2 != "") {
 
-      p <- p + geom_errorbar(
+      p <- p + ggplot2::geom_errorbar(
         data = data
         ,aes(x = mean, ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
         ,width = 0

@@ -6,12 +6,13 @@
 #' @param label character string representing column of labels
 #' @param positive character string representing a "positive" case
 #' @param threshold numeric representing threshold value
+#' @param ci_interval numeric CI interval
 #'
 #' @return HTML text summarising curve characteristics
 #' @export
 #'
 #' @examples
-calcAUC <- function(data, type, value, label, positive, threshold) {
+calcAUC <- function(data, type, value, label, positive, threshold, ci_interval) {
 
   cases <- as.character(unique(data[[label]]))
   if (length(cases) > 2) {
@@ -29,7 +30,13 @@ calcAUC <- function(data, type, value, label, positive, threshold) {
   # Calculate AUC
   if (type == "ROC") {
     auc <- format(round(attr(curves$rocs[[1]], "auc"), 2), nsmall = 2)
-    roc_obj <- pROC::roc(data[[label]], data[[value]], levels = order, ci = TRUE)
+    roc_obj <- pROC::roc(
+      data[[label]]
+      ,data[[value]]
+      ,levels = order
+      ,ci = TRUE
+      ,conf.level = ci_interval / 100
+    )
     auc_ci_lwr <- format(round(as.numeric(paste(roc_obj$ci))[1], 2), nsmall = 2)
     auc_ci_upr <- format(round(as.numeric(paste(roc_obj$ci))[3], 2), nsmall = 2)
     auc_str <- paste0("<b>AUC</b> = ", auc, " (", auc_ci_lwr, ", ", auc_ci_upr, ")")
@@ -49,7 +56,7 @@ calcAUC <- function(data, type, value, label, positive, threshold) {
   data$pred <- factor(data$pred, levels = rev(order))
   data[[label]] <- factor(data[[label]], levels = rev(order))
   df_freq <- table(data$pred, data[[label]])
-  stats <- epiR::epi.tests(df_freq)
+  stats <- epiR::epi.tests(df_freq, conf.level = ci_interval / 100)
 
   # Calculate LR+, LR-, sensitivity, specificity, PPV, NPV
   sens <- format(round(stats$detail$est[which(stats$detail$statistic == "se")] * 100, 1), nsmall = 1)

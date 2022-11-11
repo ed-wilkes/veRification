@@ -141,9 +141,10 @@ app_ui <- function(request) {
           ,tabItem(
             tabName = "imprecision"
             ,tabsetPanel(
+              id = "precision_tabs"
 
               # Data input
-              tabPanel(
+              ,tabPanel(
                 title = "Data input"
                 ,p()
                 ,fluidRow(
@@ -163,10 +164,15 @@ app_ui <- function(request) {
                       ,label = "Are the column headers in row 1?"
                       ,value = TRUE
                     )
+                    ,numericInput(
+                      inputId = "ci_precision"
+                      ,label = "Enter your preferred credible interval (%):"
+                      ,value = 95
+                    )
                     ,textInput(
                       inputId = "analyte_precision"
                       ,label = "Enter your analyte's name:"
-                      ,placeholder = "e.g., 'Free T4'"
+                      ,placeholder = "e.g., 'Free T4 (pmol/L)'"
                     )
                   )
                 )
@@ -209,6 +215,12 @@ app_ui <- function(request) {
                         inputId = "cv_claims_test"
                         ,label = "Test against manufacturer's claims?"
                       )
+                      ,actionButton(
+                        inputId = "run_model_prec"
+                        ,label = "Fit model(s)"
+                        ,icon = icon("play")
+                        ,width = "100%"
+                      )
                       ,width = 3
                     )
                   )
@@ -230,6 +242,7 @@ app_ui <- function(request) {
               # Plots
               ,tabPanel(
                 title = "Plots"
+                ,value = "precision_tab_plots"
                 ,p()
                 ,fluidRow(
                   conditionalPanel(
@@ -237,7 +250,7 @@ app_ui <- function(request) {
                     ,column(
                       width = 12
                       ,shinycssloaders::withSpinner(
-                        uiOutput("plot_imprecision")
+                        uiOutput("plots_precision")
                         ,type = 6
                       )
                     )
@@ -262,7 +275,26 @@ app_ui <- function(request) {
                   )
                 )
               )
-            )
+
+              # Bayesian model results
+              ,tabPanel(
+                title = "Bayesian model results"
+                ,p()
+                ,fluidRow(
+                  conditionalPanel(
+                    condition = "output.file_precision == true"
+                    ,column(
+                      width = 12
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("checks_precision")
+                        ,type = 6
+                      )
+                    )
+                  )
+                )
+              )
+
+            ) # closes tabSetPanel
           ) # closes "imprecision"
 
           ## Third tab "Trueness (EQA)" ----
@@ -296,6 +328,11 @@ app_ui <- function(request) {
                       inputId = "duplicate_trueness"
                       ,label = "Has the measurand been assayed in duplicate?"
                       ,value = FALSE
+                    )
+                    ,numericInput(
+                      inputId = "ci_trueness"
+                      ,label = "Enter your preferred confidence/credible interval (%):"
+                      ,value = 89
                     )
                     ,selectInput(
                       inputId = "var_option"
@@ -492,7 +529,33 @@ app_ui <- function(request) {
                   )
                 )
               )
-            )
+
+              # Bayesian model results
+              ,tabPanel(
+                title = "Bayesian model results"
+                ,p()
+                ,fluidRow(
+                  conditionalPanel(
+                    condition = "output.file_trueness == true"
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("mcmc_plot_trueness")
+                        ,type = 6
+                      )
+                    )
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("posteriors_plot_trueness")
+                        ,type = 6
+                      )
+                    )
+                  )
+                )
+              )
+
+            ) # closes tabSetPanel
           ) # closes "trueness"
 
           ## Fourth tab "Trueness (reference)" ----
@@ -536,6 +599,11 @@ app_ui <- function(request) {
                       inputId = "var_ref"
                       ,label = "Enter the reference measure of variance:"
                       ,value = NULL
+                    )
+                    ,numericInput(
+                      inputId = "ci_ref"
+                      ,label = "Enter your preferred credible interval (%):"
+                      ,value = 89
                     )
                     ,selectInput(
                       inputId = "var_option_ref"
@@ -588,6 +656,12 @@ app_ui <- function(request) {
                         ,label = "Select the column that represents the results from your method:"
                         ,choices = ""
                       )
+                      ,actionButton(
+                        inputId = "run_model_ref"
+                        ,label = "Fit model"
+                        ,icon = icon("play")
+                        ,width = "100%"
+                      )
                     )
                   )
                   ,conditionalPanel(
@@ -637,7 +711,33 @@ app_ui <- function(request) {
                   )
                 )
               )
-            )
+
+              # Bayesian model results
+              ,tabPanel(
+                title = "Bayesian model results"
+                ,p()
+                ,fluidRow(
+                  conditionalPanel(
+                    condition = "output.file_ref == true"
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("mcmc_plot_ref")
+                        ,type = 6
+                      )
+                    )
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("posteriors_plot_ref")
+                        ,type = 6
+                      )
+                    )
+                  )
+                )
+              )
+
+            ) # closes tabSetPanel
           ) # closes "trueness_ref"
 
           ## Fifth tab "Method comparison" ----
@@ -672,20 +772,25 @@ app_ui <- function(request) {
                       ,label = "Has the measurand been assayed in duplicate?"
                       ,value = FALSE
                     )
+                    ,numericInput(
+                      inputId = "ci_comparison"
+                      ,label = "Enter your preferred confidence/credible interval (%):"
+                      ,value = 89
+                    )
                     ,textInput(
                       inputId = "analyte_comparison"
                       ,label = "Enter your analyte's name:"
-                      ,placeholder = "e.g., 'Free T4'"
+                      ,placeholder = "e.g., 'Testosterone'"
                     )
                     ,textInput(
                       inputId = "method_comparison_1"
                       ,label = "Enter the name of method 1:"
-                      ,placeholder = "e.g., 'LC-MS/MS'"
+                      ,placeholder = "e.g., 'Abbott Alinity (nmol/L)'"
                     )
                     ,textInput(
                       inputId = "method_comparison_2"
                       ,label = "Enter the name of method 2:"
-                      ,placeholder = "e.g., 'Siemens Immulite'"
+                      ,placeholder = "e.g., 'LC-MS/MS (nmol/L)'"
                     )
                   )
                   ,conditionalPanel(
@@ -875,6 +980,31 @@ app_ui <- function(request) {
                 )
               )
 
+              # Bayesian model results
+              ,tabPanel(
+                title = "Bayesian model results"
+                ,p()
+                ,fluidRow(
+                  conditionalPanel(
+                    condition = "output.file_comparison == true"
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("mcmc_plot_comparison")
+                        ,type = 6
+                      )
+                    )
+                    ,column(
+                      width = 6
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("posteriors_plot_comparison")
+                        ,type = 6
+                      )
+                    )
+                  )
+                )
+              )
+
               # Bland-Altman analysis
               ,tabPanel(
                 title = "Bland-Altman analysis"
@@ -919,7 +1049,8 @@ app_ui <- function(request) {
                   )
                 )
               )
-            )
+
+            ) # closes tabSetPanel
           ) # closes "comparison"
 
           ## Sixth tab "Diagnostic performance" ----
@@ -947,6 +1078,11 @@ app_ui <- function(request) {
                       inputId = "header_diagnostic"
                       ,label = "Are the column headers in row 1?"
                       ,value = TRUE
+                    )
+                    ,numericInput(
+                      inputId = "ci_diagnostic"
+                      ,label = "Enter your preferred confidence interval (%):"
+                      ,value = 89
                     )
                   )
                 )

@@ -35,12 +35,13 @@ plotAUC <- function(data, type, value, label, positive, plot_height, plot_width,
   data[[label]] <- factor(data[[label]], levels = order)
 
   # Make curve object
-  curves <- precrec::evalmod(
-    scores = data[[value]]
-    ,labels = data[[label]]
-    ,posclass = positive
-  ) %>%
-    as.data.frame
+  curves <- as.data.frame(
+    precrec::evalmod(
+      scores = data[[value]]
+      ,labels = data[[label]]
+      ,posclass = positive
+    )
+  )
 
   # Get classification predictions given the chosen threshold
   data <- data %>%

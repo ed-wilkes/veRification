@@ -32,7 +32,8 @@ Imports:
     shinydashboardPlus,
     stringr,
     tidybayes,
-    tidyr
+    tidyr,
+    yardstick
 Suggests: 
     knitr,
     testthat (>= 3.0.0)

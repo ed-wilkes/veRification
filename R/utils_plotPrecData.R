@@ -17,9 +17,9 @@ plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte
     data <- dplyr::filter(data, !!sym(col_level) == qc_level)
   }
 
-  p <- ggplot(data, aes_string(x = x_var, y = y_var, group = x_var))+
-    geom_boxplot()+
-    geom_jitter(
+  p <- ggplot2::ggplot(data, aes_string(x = x_var, y = y_var, group = x_var))+
+    ggplot2::geom_boxplot()+
+    ggplot2::geom_jitter(
       width = 0.1
       ,aes(
         text = paste0(
@@ -28,15 +28,15 @@ plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte
         )
       )
     )+
-    stat_summary(
+    ggplot2::stat_summary(
       geom = "point"
       ,fun.y = mean
       ,colour = "red2"
       ,size = 2
     )+
-    theme_bw()+
-    xlab("Day")+
-    ylab(analyte)+
+    ggplot2::theme_bw()+
+    ggplot2::xlab("Day")+
+    ggplot2::ylab(analyte)+
     plotTheme(font_size = 12)
   return(ggplotly(p, tooltip = "text"))
 

@@ -7,6 +7,7 @@
 #' @param value_x2 character string denoting column containing method 1 duplicate values
 #' @param value_y1 character string denoting column containing method 2 values
 #' @param value_y2 character string denoting column containing method 2 duplicate values
+#' @param ci_interval numeric CI interval
 #'
 #' @return mcr or brms model object
 #' @export
@@ -18,7 +19,8 @@ fitModelComp <- function(data
                          ,value_x1
                          ,value_x2 = NULL
                          ,value_y1
-                         ,value_y2 = NULL) {
+                         ,value_y2 = NULL
+                         ,ci_interval) {
 
   if (method == "Bayesian") {
     # Load brms to get resp_se() and me() functions
@@ -31,8 +33,8 @@ fitModelComp <- function(data
     data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
     data$sd_x <- apply(data[,c(value_x1, value_x2)], 1 , sd)
     data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd)
-    data$sd_x[which(data$sd_x == 0)] <- min(df$sd_x[df$sd_x > 0]) # replace zeros with arbitrarily minimum value
-    data$sd_y[which(data$sd_y == 0)] <- min(df$sd_y[df$sd_y > 0]) # replace zeros with arbitrarily minimum value
+    data$sd_x[which(data$sd_x == 0)] <- min(data$sd_x[data$sd_x > 0]) # replace zeros with arbitrarily minimum value
+    data$sd_y[which(data$sd_y == 0)] <- min(data$sd_y[data$sd_y > 0]) # replace zeros with arbitrarily minimum value
     value_x1 <- "mean_x"
     value_y1 <- "mean_y"
   }
@@ -54,6 +56,7 @@ fitModelComp <- function(data
         x = data[[value_x1]]
         ,y = data[[value_y1]]
         ,method.reg = method
+        ,alpha = 1 - (ci_interval / 100)
       )
     } else {
       fit <- mcr::mcreg(
@@ -61,6 +64,7 @@ fitModelComp <- function(data
         ,y = data[[value_y1]]
         ,method.reg = method
         ,error.ratio = settings[[1]]/settings[[2]]
+        ,alpha = 1 - (ci_interval / 100)
       )
     }
 
@@ -82,7 +86,7 @@ fitModelComp <- function(data
         ,data = data
         ,prior = c(
           prior(normal(0, 2.5 * sd_y), class = "b", coef = "Intercept")
-          ,prior(normal(1, 2.5 * (sd_y / sd_x)), class = "b", coef = "memean_xsd_x")
+          ,prior(lognormal(0, 1), class = "b", coef = "memean_xsd_x")
           ,prior(normal(mean_x, 2.5 * sd_x), class = "meanme")
           ,prior(exponential(0.5 / sd_x), class = "sdme")
           ,prior(exponential(1 / sd_y), class = "sigma")
@@ -108,7 +112,7 @@ fitModelComp <- function(data
         ,data = data
         ,prior = c(
           prior(normal(0, 2.5 * sd_y), class = "b", coef = "Intercept")
-          ,prior(normal(1, 2.5 * (sd_y / sd_x)), class = "b", coef = "value_x1")
+          ,prior(lognormal(0, 1), class = "b", coef = "value_x1")
           ,prior(exponential(1 / sd_y), class = "sigma")
         )
         ,iter = 4000

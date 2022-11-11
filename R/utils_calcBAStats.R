@@ -28,10 +28,11 @@ calcBAStats <- function(data
 
   if (method == "Absolute") {
     data[[paste0(method, " difference")]] <- data[[value_y1]] - data[[value_x1]]
+    nb_str <- ""
   } else if (method == "Relative") {
     data[[paste0(method, " difference")]] <- log2(data[[value_y1]]) - log2(data[[value_x1]])
-    nb_str <- "<i><br><font size='2'>NB: Relative differences are presented as log2 fold-ratios of the method 2 vs 1.
-    Thus a relative difference of 1 would mean that method 2 provides results double that (2^1) of method 1 and a
+    nb_str <- "<i><br><font size='2'>NB: Relative differences are presented as log2 fold-ratios of method 2 vs 1.
+    A relative difference of 1 would therefore mean that method 2 provides results double that (2^1) of method 1 and a
     relative difference of -1 would mean that method 2 provides results half that (2^-1) of method 1.</font></i>"
   }
 
