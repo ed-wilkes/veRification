@@ -35,9 +35,12 @@ guideTruenessRef <- function() {
         <p style='margin-left: 20px'>
        <b>Statistical modelling:</b><br>
        - The posterior distribution of the mean value is summarised<br>
-       - If the 95% credible interval of the posterior distribution does not contain the assigned mean of the reference material, this is highlighted<br>
-       - The Bayes factor based on the posterior and prior distributions is also shown and is highlighted if > 10<br>
+       - The Bayes factor based on the posterior and prior distributions is also shown<br>
        </p>
-       "
+
+    <b>Bayesian model results tab:</b><br>
+    - The MCMC traces and full posterior distributions for each model's parameters can be viewed under the <b>[Bayesian model results]</b> tab<br>
+    <br>
+    "
   )
 }

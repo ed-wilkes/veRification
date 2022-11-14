@@ -4,7 +4,7 @@
 #' @param value character string denoting column containing values
 #' @param label character string denoting column containing labels
 #' @param positive character string represeting "positive" case
-#' @param threshold numeric curve threshold
+#' @param threshold numeric denoting the threshold output from calcCurves()
 #'
 #' @return ggplot2 object
 #' @export

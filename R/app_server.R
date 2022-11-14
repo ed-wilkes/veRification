@@ -160,7 +160,7 @@ app_server <- function(input, output, session) {
     withProgress(message = "Fitting model(s), please wait...", {
 
       # Requirements before processing
-      req(input$col_day, input$col_value, input$col_level)
+      req(input$col_day, input$col_value, input$col_level, input$ci_precision)
 
       # Get QC levels and claims
       qc_levels <- unique(df_precision()[[input$col_level]])
@@ -478,6 +478,7 @@ app_server <- function(input, output, session) {
         ,input$cor_method_eqa
         ,input$stat_method_eqa
         ,input$reg_method_eqa
+        ,input$ci_trueness
       )
 
       if (input$duplicate_trueness == TRUE) {
@@ -746,6 +747,7 @@ app_server <- function(input, output, session) {
         ,input$mean_ref
         ,input$var_ref
         ,input$var_option_ref
+        ,input$ci_ref
       )
 
       if (input$duplicate_ref == TRUE) {
@@ -1143,6 +1145,7 @@ app_server <- function(input, output, session) {
         ,input$reg_method_comp
         ,input$col_ref_1
         ,input$col_new_1
+        ,input$ci_comparison
       )
 
       if (input$duplicate_trueness == TRUE) {
@@ -1278,13 +1281,13 @@ app_server <- function(input, output, session) {
   })
 
   # Model fit plot
-  output$model_fit_comp <- plotly::renderPlotly({
+  output$model_fit_comp <- renderPlotly({
     plot_output_comp$plot
   })
 
   # Dynamic UI to display plot
   output$plot_comparison <- renderUI({
-    plotly::plotlyOutput("model_fit_comp")
+    plotlyOutput("model_fit_comp")
   })
 
   # Model parameters/coefficients
@@ -1494,37 +1497,37 @@ app_server <- function(input, output, session) {
     checkInputLevels(input, "col_diag_label", df_diagnostic())
   })
 
-  # Dynamically adjust sliderInput values based on input data
-  observe({
-
-    # Requirements before updating
-    req(
-      df_diagnostic()
-      ,input$col_diag_label
-      ,input$col_diag_value
-      ,input$curve_type
-      ,input$positive_label
-    )
-
-    # Update slider values based on input data and automatically pick best threshold
-    updateSliderInput(
-      session
-      ,"slider_threshold"
-      ,value = optimThreshold(
-        data = df_diagnostic()
-        ,type = input$curve_type
-        ,value = input$col_diag_value
-        ,label = input$col_diag_label
-        ,positive = input$positive_label
-      )
-      ,min = min(df_diagnostic()[[input$col_diag_value]], na.rm = T)
-      ,max = max(df_diagnostic()[[input$col_diag_value]], na.rm = T)
-      # ,step = nchar(
-      #   strsplit(as.character(df_diagnostic()[[input$col_diag_value]][1]), "\\.")
-      # )[[1]][2]
-      ,step = round((max(df_diagnostic()[[input$col_diag_value]], na.rm = T) - min(df_diagnostic()[[input$col_diag_value]], na.rm = T))/100,1)
-    )
-  })
+  # # Dynamically adjust sliderInput values based on input data
+  # observe({
+  #
+  #   # Requirements before updating
+  #   req(
+  #     df_diagnostic()
+  #     ,input$col_diag_label
+  #     ,input$col_diag_value
+  #     ,input$curve_type
+  #     ,input$positive_label
+  #   )
+  #
+  #   # Update slider values based on input data and automatically pick best threshold
+  #   updateSliderInput(
+  #     session
+  #     ,"slider_threshold"
+  #     ,value = optimThreshold(
+  #       data = df_diagnostic()
+  #       ,type = input$curve_type
+  #       ,value = input$col_diag_value
+  #       ,label = input$col_diag_label
+  #       ,positive = input$positive_label
+  #     )
+  #     ,min = min(df_diagnostic()[[input$col_diag_value]], na.rm = T)
+  #     ,max = max(df_diagnostic()[[input$col_diag_value]], na.rm = T)
+  #     # ,step = nchar(
+  #     #   strsplit(as.character(df_diagnostic()[[input$col_diag_value]][1]), "\\.")
+  #     # )[[1]][2]
+  #     ,step = round((max(df_diagnostic()[[input$col_diag_value]], na.rm = T) - min(df_diagnostic()[[input$col_diag_value]], na.rm = T))/100,1)
+  #   )
+  # })
 
   # Render data
   output$data_diagnostic <- DT::renderDataTable(
@@ -1534,135 +1537,125 @@ app_server <- function(input, output, session) {
     ,rownames = FALSE
   )
 
-  # Plots and statistics
-  output$diagnostic_curve <- renderPlot({
+  # Reactive values definition
+  plot_output_diag <- reactiveValues(curves = NULL, confmat = NULL, thresholds = NULL)
+  fit_diag <- reactiveValues(curves = NULL, thresholds = NULL, text = NULL)
 
-    # Requirements before processing
-    req(
-      input$input_file_diagnostic
-      ,input$col_diag_label
-      ,input$col_diag_value
-      ,input$curve_type
-      ,input$positive_label
-    )
+  # Listen to "run_model" input
+  toListenDiag <- reactive({
+    list(input$run_model_diag) # this is a list in case extra things need to be added later
+  })
 
-    if (!is.null(input$data_diagnostic_rows_selected)) {
-      df_diag <- df_diagnostic()[-input$data_diagnostic_rows_selected,]
-    } else {
-      df_diag <- df_diagnostic()
-    }
+  # Observe toListenDiag(), fit curves and update plot_output_diag with fitted model if "run_model_diag" is pressed
+  observeEvent(toListenDiag(), {
 
-    # Validation
-    validate(
-      need(
-        expr = is.numeric(df_diag[[input$col_diag_value]]) == TRUE
-        ,message = "The column in your data that represents the measurements for your method
+    withProgress(message = "Bootstrapping data, please wait...", {
+
+      # Requirements before processing
+      req(
+        input$input_file_diagnostic
+        ,input$col_diag_label
+        ,input$col_diag_value
+        ,input$curve_type
+        ,input$positive_label
+        ,input$ci_diagnostic
+      )
+
+      if (!is.null(input$data_diagnostic_rows_selected)) {
+        df_diag <- df_diagnostic()[-input$data_diagnostic_rows_selected,]
+      } else {
+        df_diag <- df_diagnostic()
+      }
+
+      # Update focus to regression analysis tab
+      updateTabsetPanel(session, "diag_tabs", selected = "diag_tabs_plots")
+
+      # Validation
+      validate(
+        need(
+          expr = is.numeric(df_diag[[input$col_diag_value]]) == TRUE
+          ,message = "The column in your data that represents the measurements for your method
         does not consist of numbers. This may be because there are missing values or the column
         contains text. Please check/edit your input data and try again."
-      )
-      ,need(
-        expr = length(unique(df_diag[[input$col_diag_label]])) <= 2
-        ,message = "The column in your data that represents the class labels contains
+        )
+        ,need(
+          expr = length(unique(df_diag[[input$col_diag_label]])) <= 2
+          ,message = "The column in your data that represents the class labels contains
         more than 2 different values. Please check/edit your input data and try again."
+        )
       )
-    )
 
-    plotAUC(
-      data = df_diag
-      ,type = input$curve_type
-      ,value = input$col_diag_value
-      ,label = input$col_diag_label
-      ,positive = input$positive_label
-      ,plot_height = window_height()
-      ,plot_width = window_width()
-      ,threshold = input$slider_threshold
-    )
+      # Fit curves
+      bootstrap <- calcCurves(
+        data = df_diag
+        ,type = input$curve_type
+        ,value = input$col_diag_value
+        ,label = input$col_diag_label
+        ,positive = input$positive_label
+        ,ci_interval = input$ci_diagnostic
+      )
+
+      fit_diag$curves <- bootstrap$curves
+      fit_diag$thresholds <- bootstrap$thresholds
+      fit_diag$text <- bootstrap$text
+
+      # Bootstrapped curves
+      setProgress(50, "Plotting results...")
+      plot_output_diag$curves <- plotCurves(
+        data = df_diag
+        ,type = input$curve_type
+        ,value = input$col_diag_value
+        ,label = input$col_diag_label
+        ,positive = input$positive_label
+        ,curves_data = fit_diag$curves
+        ,threshold = median(fit_diag$thresholds)
+        ,plot_height = window_height()
+        ,plot_width = window_width()
+      )
+
+      # Confusion matrix
+      plot_output_diag$confmat <- plotConfMat(
+        data = df_diag
+        ,value = input$col_diag_value
+        ,label = input$col_diag_label
+        ,positive = input$positive_label
+        ,threshold = median(fit_diag$thresholds)
+      )
+
+      # Histogram of bootstrapped thresholds
+      plot_output_diag$thresholds <- plotThresholds(
+        data = fit_diag$thresholds
+        ,plot_height = window_height()
+        ,plot_width = window_width()
+      )
+
+    })
 
   })
 
+  output$diag_plot_curves <- renderPlot({
+   plot_output_diag$curves
+  })
   output$plot_diagnostic_curve <- renderUI({
-    plotOutput("diagnostic_curve", height = input$height * 0.6)
+   plotOutput("diag_plot_curves", height = input$height * 0.6)
   })
 
-  output$diagnostic_conf <- renderPlot({
-
-    # Requirements before processing
-    req(
-      input$input_file_diagnostic
-      ,input$col_diag_label
-      ,input$col_diag_value
-      ,input$curve_type
-      ,input$positive_label
-    )
-
-    if (!is.null(input$data_diagnostic_rows_selected)) {
-      df_conf <- df_diagnostic()[-input$data_diagnostic_rows_selected,]
-    } else {
-      df_conf <- df_diagnostic()
-    }
-
-    # Validation
-    validate(
-      need(
-        expr = is.numeric(df_conf[[input$col_diag_value]]) == TRUE
-        ,message = "The column in your data that represents the measurements for your method
-        does not consist of numbers. This may be because there are missing values or the column
-        contains text. Please check/edit your input data and try again."
-      )
-    )
-
-    plotConfMat(
-      data = df_conf
-      ,value = input$col_diag_value
-      ,label = input$col_diag_label
-      ,positive = input$positive_label
-      ,threshold = input$slider_threshold
-    )
-
+  output$diag_plot_conf <- renderPlot({
+   plot_output_diag$confmat
   })
-
   output$plot_diagnostic_conf <- renderUI({
-    plotOutput("diagnostic_conf", height = input$height * 0.6)
+   plotOutput("diag_plot_conf", height = input$height * 0.6)
   })
 
-  # Calculate AUC and output as HTML
   output$area_under_the_curve <- renderUI({
+    fit_diag$text
+  })
 
-    # Requirements before processing
-    req(
-      input$input_file_diagnostic
-      ,input$col_diag_label
-      ,input$col_diag_value
-      ,input$curve_type
-      ,input$positive_label
-    )
-
-    if (!is.null(input$data_diagnostic_rows_selected)) {
-      df_auc <- df_diagnostic()[-input$data_diagnostic_rows_selected,]
-    } else {
-      df_auc <- df_diagnostic()
-    }
-
-    # Validation
-    validate(
-      need(
-        expr = is.numeric(df_auc[[input$col_diag_value]]) == TRUE
-        ,message = "The column in your data that represents the measurements for your method
-        does not consist of numbers. This may be because there are missing values or the column
-        contains text. Please check/edit your input data and try again."
-      )
-    )
-
-    calcAUC(
-      data = df_auc
-      ,type = input$curve_type
-      ,value = input$col_diag_value
-      ,label = input$col_diag_label
-      ,positive = input$positive_label
-      ,threshold = input$slider_threshold
-      ,ci_interval = input$ci_diagnostic
-    )
-
+  output$diag_plot_thresholds <- renderPlot({
+   plot_output_diag$thresholds
+  })
+  output$plot_diagnostic_threshold <- renderUI({
+   plotOutput("diag_plot_thresholds", height = input$height * 0.6)
   })
 
   ## "Export report" tab ----

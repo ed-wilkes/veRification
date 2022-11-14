@@ -43,26 +43,6 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n, ci_inter
     ,format(round(quantile(as.matrix(model)[,1], ci_upr), 2), nsmall = 2), ")"
   )
 
-  sum_zero <- sum(as.matrix(model)[,1] > prior_mean) / length(as.matrix(model)[,1])
-  icon_tested_one <- ifelse(
-    sum_zero > ci_upr
-    ,yes = "triangle-exclamation"
-    ,no = ifelse(
-      sum_zero < ci_lwr
-      ,yes = "triangle-exclamation"
-      ,no = "circle-check"
-    )
-  )
-  colour_tested_one <- ifelse(
-    sum_zero > ci_upr
-    ,yes = "red"
-    ,no = ifelse(
-      sum_zero < ci_lwr
-      ,yes = "red"
-      ,no = "green"
-    )
-  )
-
   # Calculate Bayes factor
   bf_obj <-  bayestestR::bayesfactor(
     posterior = as.matrix(model)[,1]
@@ -71,16 +51,6 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n, ci_inter
   )
   bf <- round(exp(bf_obj$log_BF), 1)
 
-  icon_tested_two <- ifelse(
-    bf > 10
-    ,yes = "triangle-exclamation"
-    ,no = "circle-check"
-  )
-  colour_tested_two <- ifelse(
-    bf > 10
-    ,yes = "red"
-    ,no = "green"
-  )
   width <- 12
 
   # Generate value boxes
@@ -89,9 +59,8 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n, ci_inter
     ,fluidRow(
       valueBox(
         value = summary
-        ,subtitle = "Posterior median"
-        ,color = colour_tested_one
-        ,icon = icon(icon_tested_one)
+        ,subtitle = "Posterior summary"
+        ,color = "blue"
         ,width = width
       )
     )
@@ -113,8 +82,7 @@ boxesRef <- function(model, prior_mean, prior_var, var_option, prior_n, ci_inter
       valueBox(
         value = bf
         ,subtitle = paste0("Bayes factor against the null of ", prior_mean)
-        ,color = colour_tested_two
-        ,icon = icon(icon_tested_two)
+        ,color = "blue"
         ,width = width
       )
     )

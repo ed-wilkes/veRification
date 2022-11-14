@@ -29,14 +29,6 @@ calcCompCoef <- function(data
 
   } else {
 
-    # parameters <- brms::posterior_summary(model, robust = TRUE)
-    # slope <- format(round(parameters[2,1], 2), nsmall = 2)
-    # slope_lwr <- format(round(parameters[2,3], 2), nsmall = 2)
-    # slope_upr <- format(round(parameters[2,4], 2), nsmall = 2)
-    # inter <- format(round(parameters[1,1], 2), nsmall = 2)
-    # inter_lwr <- format(round(parameters[1,3], 2), nsmall = 2)
-    # inter_upr <- format(round(parameters[1,4], 2), nsmall = 2)
-
     text <- HTML("")
 
   }

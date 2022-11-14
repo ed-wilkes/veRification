@@ -28,7 +28,7 @@ guideTruenessEQA <- function() {
        <b>Analysis settings:</b><br>
        - Select the regression method, correlation coefficient, and statistical test you wish to use for your analysis (these MUST be selected)<br>
        - If you wish to perform a Bland-Altman analysis, select the y-axis you wish to plot (i.e., absolute vs relative (%) difference)<br>
-       - Once you are ready, press the <b>[Fit model]</b> button
+       - Once you are ready, press the <b>[Fit model]</b> button<br>
        - Note that the Bayesian measurement error model will indefinitely take longer to run, so please be patient<br>
        </p>
 
@@ -40,13 +40,17 @@ guideTruenessEQA <- function() {
 
        <p style='margin-left: 20px'>
        <b>Model parameters:</b><br>
-       - The parameters of the regression model fitted to your data (Passing-Bablok, Deming, etc.) and shown with the associated 95% confidence intervals in parentheses<br>
+       - The parameters of the regression model fitted to your data (Passing-Bablok, Deming, etc.) and shown with the associated confidence/credible intervals in parentheses<br>
        <br>
 
        <b>Statistical inference:</b><br>
-       - The results of your chosen statistical inferences are shown, including the value of the relevant test statistic and the associated P-value<br>
-       - <b>NB:</b> The false positive rate for the frequentist tests is automatically set to 5% (0.05) - P-values below this threshold will flag red and produce a warning symbol<br>
+       - The results of your chosen statistical inferences are shown with the chosen confidence/credible interval<br>
+       - If a frequentist test is chosen, the value of the relevant test statistic and the associated <i>P</i>-value are shown<br>
        </p>
-       "
+
+    <b>Bayesian model results tab:</b><br>
+    - The MCMC traces and full posterior distributions for each model's parameters can be viewed under the <b>[Bayesian model results]</b> tab<br>
+    <br>
+    "
   )
 }

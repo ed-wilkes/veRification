@@ -36,7 +36,11 @@ guideImprecision <- function() {
     - You can view the Bayesian modelling results within the <b>[Summary statistics]</b> tab<br>
     - A separate model is fitted to each level of QC present within the data<br>
     - The repeatability, intermediate precision, and total laboratory CV (%) are provided for each QC level<br>
-    - If present, the posterior distribution of the total CV is tested against the manufacturer's claim<br>
+    - If present, the posterior distribution of the total CV is tested against the manufacturer's claim with the given credible interval<br>
+    <br>
+
+    <b>Bayesian model results tab:</b><br>
+    - The MCMC traces and full posterior distributions for each model's parameters can be viewed under the <b>[Bayesian model results]</b> tab<br>
     <br>
     "
   )

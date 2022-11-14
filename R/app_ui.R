@@ -155,7 +155,7 @@ app_ui <- function(request) {
                     ,status = "primary"
                     ,fileInput(
                       inputId = "input_file_precision"
-                      ,label = "Select your input file containing your data:"
+                      ,label = "Select your input file containing your data in long format:"
                       ,accept = c(".csv", ".xls", ".xlsx")
                       ,multiple = FALSE
                     )
@@ -167,7 +167,7 @@ app_ui <- function(request) {
                     ,numericInput(
                       inputId = "ci_precision"
                       ,label = "Enter your preferred credible interval (%):"
-                      ,value = 95
+                      ,value = 89
                     )
                     ,textInput(
                       inputId = "analyte_precision"
@@ -446,10 +446,13 @@ app_ui <- function(request) {
                         ,label = "Select the column that represents the EQA measure of variation (e.g., SD):"
                         ,choices = ""
                       )
-                      ,selectInput(
-                        inputId = "col_n_trueness"
-                        ,label = "Select the column that represents the number of observations:"
-                        ,choices = ""
+                      ,conditionalPanel(
+                        condition = "input.var_option == 'SEM'"
+                        ,selectInput(
+                          inputId = "col_n_trueness"
+                          ,label = "Select the column that represents the number of observations:"
+                          ,choices = ""
+                        )
                       )
                       ,selectInput(
                         inputId = "col_rep_1_trueness"
@@ -1057,9 +1060,10 @@ app_ui <- function(request) {
           ,tabItem(
             tabName = "diagnostic"
             ,tabsetPanel(
+              id = "diag_tabs"
 
               # Data input
-              tabPanel(
+              ,tabPanel(
                 title = "Data input"
                 ,p()
                 ,fluidRow(
@@ -1126,6 +1130,12 @@ app_ui <- function(request) {
                         ,label = "Select the type of curve you wish to produce:"
                         ,choices = c("ROC", "PR (precision-recall)")
                       )
+                      ,actionButton(
+                        inputId = "run_model_diag"
+                        ,label = "Fit curves"
+                        ,icon = icon("play")
+                        ,width = "100%"
+                      )
                       ,width = 3
                     )
                   )
@@ -1134,13 +1144,17 @@ app_ui <- function(request) {
 
               # Plots and statistics
               ,tabPanel(
-                title = "Plots and analysis"
+                value = "diag_tabs_plots"
+                ,title = "Plots and analysis"
                 ,p()
                 ,fluidRow(
                   conditionalPanel(
                     condition = "input.col_diag_value != '' && input.col_diag_label != '' && input.curve_type != ''"
-                    ,column(
-                      width = 6
+                    ,box(
+                      title = "Bootstrapped curves"
+                      ,solidHeader = TRUE
+                      ,collapsible = TRUE
+                      ,status = "primary"
                       ,shinycssloaders::withSpinner(
                         uiOutput("plot_diagnostic_curve")
                         ,type = 6
@@ -1149,8 +1163,11 @@ app_ui <- function(request) {
                   )
                   ,conditionalPanel(
                     condition = "input.col_diag_value != '' && input.col_diag_label != '' && input.curve_type != ''"
-                    ,column(
-                      width = 6
+                    ,box(
+                      title = "Confusion matrix at optimal threshold"
+                      ,solidHeader = TRUE
+                      ,collapsible = TRUE
+                      ,status = "primary"
                       ,shinycssloaders::withSpinner(
                         uiOutput("plot_diagnostic_conf")
                         ,type = 6
@@ -1163,7 +1180,7 @@ app_ui <- function(request) {
                   conditionalPanel(
                     condition = "input.col_diag_value != '' && input.col_diag_label != '' && input.curve_type != ''"
                     ,box(
-                      title = "Summary statistics"
+                      title = "Bootstrapping results"
                       ,solidHeader = TRUE
                       ,collapsible = TRUE
                       ,status = "primary"
@@ -1182,18 +1199,23 @@ app_ui <- function(request) {
                       ,solidHeader = TRUE
                       ,collapsible = TRUE
                       ,status = "primary"
-                      ,sliderInput(
-                        "slider_threshold"
-                        ,label = "Choose your analyte threshold:"
-                        ,value = 0
-                        ,min = 0
-                        ,max = 1
+                      # ,sliderInput(
+                      #   "slider_threshold"
+                      #   ,label = "Choose your analyte threshold:"
+                      #   ,value = 0
+                      #   ,min = 0
+                      #   ,max = 1
+                      # )
+                      ,shinycssloaders::withSpinner(
+                        uiOutput("plot_diagnostic_threshold")
+                        ,type = 6
                       )
                     )
                   )
                 )
               )
-            )
+
+            ) # closes tabSetPanel
           ) # closes "diagnostic performance"
 
           ## Seventh tab "Export report" ----

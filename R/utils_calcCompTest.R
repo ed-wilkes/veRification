@@ -120,51 +120,12 @@ calcCompTest <- function(data
 
     )
 
-    add_zero <- sum(as.matrix(model)[,1] > 0) / length(as.matrix(model)[,1])
-    icon_tested_one <- ifelse(
-      add_zero > ci_upr
-      ,yes = "triangle-exclamation"
-      ,no = ifelse(
-        add_zero < ci_lwr
-        ,yes = "triangle-exclamation"
-        ,no = "circle-check"
-      )
-    )
-    colour_tested_one <- ifelse(
-      add_zero > ci_upr
-      ,yes = "red"
-      ,no = ifelse(
-        add_zero < ci_lwr
-        ,yes = "red"
-        ,no = "green"
-      )
-    )
-
     proportional <- paste0(
       format(round(median(as.matrix(model)[,2]),2), nsmall = 2), " ("
       ,format(round(quantile(as.matrix(model)[,2], ci_lwr), 2), nsmall = 2), ", "
       ,format(round(quantile(as.matrix(model)[,2], ci_upr), 2), nsmall = 2), ")"
     )
 
-    prop_zero <- sum(as.matrix(model)[,2] > 1) / length(as.matrix(model)[,2])
-    icon_tested_two <- ifelse(
-      prop_zero > ci_upr
-      ,yes = "triangle-exclamation"
-      ,no = ifelse(
-        prop_zero < ci_lwr
-        ,yes = "triangle-exclamation"
-        ,no = "circle-check"
-      )
-    )
-    colour_tested_two <- ifelse(
-      prop_zero > ci_upr
-      ,yes = "red"
-      ,no = ifelse(
-        prop_zero < ci_lwr
-        ,yes = "red"
-        ,no = "green"
-      )
-    )
     width <- 12
 
     # Basic model checks
@@ -187,8 +148,7 @@ calcCompTest <- function(data
         valueBox(
           value = additive
           ,subtitle = "Additive difference (intercept)"
-          ,color = colour_tested_one
-          ,icon = icon(icon_tested_one)
+          ,color = "blue"
           ,width = width
         )
       )
@@ -208,8 +168,7 @@ calcCompTest <- function(data
         valueBox(
           value = proportional
           ,subtitle = "Proportional difference (slope)"
-          ,color = colour_tested_two
-          ,icon = icon(icon_tested_two)
+          ,color = "blue"
           ,width = width
         )
       )

@@ -18,20 +18,32 @@ guideDiagnostic <- function() {
        - Select the columns within your data as indicated<br>
        - Choose the type of curve you wish to produce from your data. If your 'positive' is rare, it is advised to use PR curves<br>
        - Select the value of your outcome column that represents a 'positive' case<br>
-       <br>
+       - Press the <b>[Fit curves]</b> button when you are ready<br>
+       - Note that, depending on the size of your data set, this may take a minute or two to run<br>
        </p>
 
     <b>Plots and analysis tab:</b><br>
-    - You can view the curve produced from your data in the <b>[Plots and analysis]</b> tab<br>
-    - You can also view the contigency table/2x2 table/confusion matrix produced with the given analyte value threshold under the same tab<br>
+    - You can view the bootstrapped curves produced from your data in the <b>[Plots and analysis]</b> tab<br>
     <br>
 
        <p style='margin-left: 20px'>
-       <b>Summary statistics</b><br>
-       - The relevant area-under-the-curve is shown<br>
-       - The classification statistics (sensitivity, specificity, etc.) are shown and are calculated <i>dynamically</i> given the analyte threshold value chosen within the <b>[Diagnostic threshold]</b> box<br>
-       - <b>NB:</b> If the analyte threshold value is changed within the <b>[Diagnostic threshold]</b> box, these statistics will automatically be recalculated<br>
+       <b>Bootstrapped curves:</b><br>
+       - The results of a random sample of 100 of the 1,000 bootstrap (with replacement) draws of the data are shown (grey)<br>
+       - The baseline curve from the total data set is also shown (blue)<br>
+       - The optimum threshold is shown as a single point<br>
        <br>
+
+      <b>Confusion matrix at optimal threshold:</b><br>
+      - You can view the contigency table/2x2 table/confusion matrix produced with the optimal analyte value threshold<br>
+      <br>
+
+      <b>Bootstrapping results:</b><br>
+      - The bootstrapped values for the various parameters from the chosen curve are shown with the chosen confidence interval<br>
+      <br>
+
+      <b>Diagnostic threshold:</b><br>
+      - The bootstrapped distribution of optimal analyte value thresholds are shown<br>
+      <br>
        </p>
    "
   )

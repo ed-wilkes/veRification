@@ -8,6 +8,7 @@ License: MIT + file LICENSE
 Imports: 
     bayestestR,
     brms,
+    caret,
     config (>= 0.3.1),
     DescTools,
     dplyr,
@@ -22,6 +23,7 @@ Imports:
     precrec,
     pROC,
     readxl,
+    rlist,
     rmarkdown,
     ROCR,
     rstanarm,
