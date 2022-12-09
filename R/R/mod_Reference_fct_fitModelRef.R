@@ -46,11 +46,22 @@ fitModelRef <- function(data
     sd_y <- sd(data$value)
     form <- paste0("value ~ 1 + (1|", col_sample, ")") # includes duplicates as varying effects
 
+    prior_obj <- c(
+      prior(student_t(30, prior_location, prior_scale), class = "Intercept")
+      ,prior(exponential(1 / sd_y), class = "sd")
+      ,prior(exponential(1 / sd_y), class = "sigma")
+    )
+
   } else {
 
     sd_y <- sd(data[[col_value_1]])
     data$value <- data[[col_value_1]]
     form <- "value ~ 1"
+
+    prior_obj <- c(
+      prior(student_t(30, prior_location, prior_scale), class = "Intercept")
+      ,prior(exponential(1 / sd_y), class = "sigma")
+    )
 
   }
 
@@ -61,10 +72,7 @@ fitModelRef <- function(data
   fit <- brms::brm(
     form = form
     ,data = data
-    ,prior = c(
-      prior(student_t(3, prior_location, prior_scale), class = "Intercept")
-      ,prior(exponential(1 / sd_y), class = "sigma")
-    )
+    ,prior = prior_obj
     ,iter = 20000
     ,control = list(adapt_delta = 0.99)
     ,seed = 123
