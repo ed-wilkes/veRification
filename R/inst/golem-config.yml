@@ -1,9 +1,0 @@
-default:
-  golem_name: veRification
-  golem_version: 0.0.0.9000
-  app_prod: no
-production:
-  app_prod: yes
-dev:
-  # golem_wd: G:/My Drive/Projects/veRification
-  golem_wd: C:/Users/ewilk/Google Drive/Projects/veRification
