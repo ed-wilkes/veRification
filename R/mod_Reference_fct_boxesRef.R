@@ -41,7 +41,7 @@ boxesRef <- function(model, prior_location, ci_interval, model_type, bayes_facto
   )
 
   # Calculate Bayes factor
-  bf <- round(exp(bayes_factor$log_BF), 1)
+  bf <- format(round(exp(bayes_factor$log_BF), 1), 1)
 
   width <- 12
 
