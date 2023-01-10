@@ -44,7 +44,7 @@ mod_Imprecision_ui <- function(id) {
               ,value = 89
             )
             ,textInput(
-              inputId = ns("analyte")
+              inputId = ns("analyte_name")
               ,label = "Enter your analyte's name:"
               ,placeholder = "e.g., 'Free T4 (pmol/L)'"
             )
@@ -181,6 +181,7 @@ mod_Imprecision_server <- function(id) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
+    cdata <- session$clientData
 
     output$file <- reactive({
       return(!is.null(input$input_file))
@@ -379,7 +380,8 @@ mod_Imprecision_server <- function(id) {
                   ,y_var = input$col_value
                   ,qc_level = i
                   ,col_level = input$col_level
-                  ,analyte = input$analyte_precision
+                  ,analyte = input$analyte_name
+                  ,plot_dim = cdata
                 )
               )
             )

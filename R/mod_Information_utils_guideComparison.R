@@ -60,7 +60,7 @@ guideComparison <- function() {
        </p>
 
     <b>Bayesian model diagnostics tab:</b><br>
-    - The MCMC traces and full posterior distributions for each model's parameters can be viewed under the <b>[Bayesian model diagnostics]</b> tab<br>
+    - The MCMC traces and full posterior distributions for the model's parameters can be viewed under the <b>[Bayesian model diagnostics]</b> tab<br>
     <br>
     "
   )

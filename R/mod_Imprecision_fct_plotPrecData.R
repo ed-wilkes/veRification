@@ -6,12 +6,13 @@
 #' @param qc_level numeric/character string denoting QC level
 #' @param col_level numeric/character string denoting column containing QC levels
 #' @param analyte character string denoting analyte name
+#' @param plot_dim clientData from session
 #'
 #' @return plotly object
 #' @export
 #'
 #' @examples
-plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte) {
+plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte, plot_dim) {
 
   if (!is.null(col_level) && col_level != "") {
     data <- dplyr::filter(data, !!sym(col_level) == qc_level)
@@ -40,7 +41,7 @@ plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte
     plotTheme(font_size = 12)
     # theme(plot.margin = margin(0, 0, 0, l = -3, "cm"))
 
-  p <- ggplotly(p, tooltip = "text")
+  p <- ggplotly(p, tooltip = "text", width = plot_dim$output_pid_width, height = plot_dim$output_pid_height)
 
   return(p)
 
