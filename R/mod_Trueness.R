@@ -345,14 +345,14 @@ mod_Trueness_server <- function(id, window_height) {
           ,choices = "Bayesian posterior summary"
           ,selected = "Bayesian posterior summary"
         )
-        showTab(inputId = "trueness_tabs", target = "Bayesian model results")
+        showTab(inputId = "trueness_tabs", target = "Bayesian model diagnostics")
       } else {
         updateSelectInput(
           session
           ,"stat_method"
           ,choices = c("Select a method" = "", "Paired t-test", "Paired Wilcoxon (Mann-Whitney) test")
         )
-        hideTab(inputId = "trueness_tabs", target = "Bayesian model results")
+        hideTab(inputId = "trueness_tabs", target = "Bayesian model diagnostics")
       }
     })
 
@@ -549,7 +549,7 @@ mod_Trueness_server <- function(id, window_height) {
           ,settings = settings
         )
 
-        setProgress(50, message = "Plotting data ...")
+        setProgress(0.5, message = "Plotting data ...")
         plot_output$plot <- plotEQA(
           data = df_true
           ,option_var = input$var_option

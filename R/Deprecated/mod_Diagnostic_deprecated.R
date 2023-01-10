@@ -40,7 +40,7 @@ mod_Diagnostic_ui <- function(id) {
             )
             ,numericInput(
               inputId = ns("ci_width")
-              ,label = "Enter your preferred credible interval (%):"
+              ,label = "Enter your preferred confidence interval (%):"
               ,value = 89
             )
           )
@@ -80,9 +80,14 @@ mod_Diagnostic_ui <- function(id) {
                 ,label = "Select the outcome that represents a 'positive':"
                 ,choices = ""
               )
+              ,selectInput(
+                inputId = ns("curve_type")
+                ,label = "Select the type of curve you wish to produce:"
+                ,choices = c("ROC", "PR (precision-recall)")
+              )
               ,actionButton(
                 inputId = ns("run_model")
-                ,label = "Fit model"
+                ,label = "Fit curves"
                 ,icon = icon("play")
                 ,width = "100%"
               )
@@ -101,12 +106,12 @@ mod_Diagnostic_ui <- function(id) {
           conditionalPanel(
             condition = paste0("output[\'", ns("file"), "\'] == true && input[\'", ns("run_model"), "\'] != 0")
             ,box(
-              title = "Model fit"
+              title = "Bootstrapped curves"
               ,solidHeader = TRUE
               ,collapsible = TRUE
               ,status = "primary"
               ,shinycssloaders::withSpinner(
-                uiOutput(ns("plot_model"))
+                uiOutput(ns("plot_curves"))
                 ,type = 6
               )
             )
@@ -114,12 +119,12 @@ mod_Diagnostic_ui <- function(id) {
           ,conditionalPanel(
             condition = paste0("output[\'", ns("file"), "\'] == true && input[\'", ns("run_model"), "\'] != 0")
             ,box(
-              title = "Model coefficients"
+              title = "Confusion matrix at optimal threshold"
               ,solidHeader = TRUE
               ,collapsible = TRUE
               ,status = "primary"
               ,shinycssloaders::withSpinner(
-                uiOutput(ns("model_coefficients"))
+                uiOutput(ns("plot_confmat"))
                 ,type = 6
               )
             )
@@ -130,37 +135,27 @@ mod_Diagnostic_ui <- function(id) {
           conditionalPanel(
             condition = paste0("output[\'", ns("file"), "\'] == true && input[\'", ns("run_model"), "\'] != 0")
             ,box(
-              title = "Decision curve analysis"
+              title = "Bootstrapping results"
               ,solidHeader = TRUE
               ,collapsible = TRUE
               ,status = "primary"
               ,shinycssloaders::withSpinner(
-                uiOutput(ns("plot_dca"))
+                htmlOutput(ns("area_under_the_curve"))
                 ,type = 6
               )
-            )
-          )
-        )
-      )
-
-      # Bayesian model diagnostics
-      ,tabPanel(
-        title = "Bayesian model diagnostics"
-        ,p()
-        ,fluidRow(
-          conditionalPanel(
-            condition = paste0("output[\'", ns("file"), "\'] == true && input[\'", ns("run_model"), "\'] != 0")
-            ,column(
-              width = 6
-              ,shinycssloaders::withSpinner(
-                uiOutput(ns("mcmc_plot"))
-                ,type = 6
+              ,tags$head(
+                tags$style(
+                  paste0("#", ns("area_under_the_curve"), "{color: black; font-size: 18px;}")
+                )
               )
             )
-            ,column(
-              width = 6
+            ,box(
+              title = "Diagnostic threshold"
+              ,solidHeader = TRUE
+              ,collapsible = TRUE
+              ,status = "primary"
               ,shinycssloaders::withSpinner(
-                uiOutput(ns("posteriors_plot"))
+                uiOutput(ns("plot_threshold"))
                 ,type = 6
               )
             )
@@ -181,7 +176,6 @@ mod_Diagnostic_server <- function(id, window_height) {
   moduleServer( id, function(input, output, session) {
 
     ns <- session$ns
-    cdata <- session$clientData
 
     output$file <- reactive({
       return(!is.null(input$input_file))
@@ -245,8 +239,8 @@ mod_Diagnostic_server <- function(id, window_height) {
     )
 
     # Reactive values definition
-    plot_output <- reactiveValues(curves = NULL, dca = NULL, checks = NULL)
-    fit <- reactiveValues(model = NULL, boxes = NULL)
+    plot_output <- reactiveValues(curves = NULL, confmat = NULL, thresholds = NULL)
+    fit <- reactiveValues(curves = NULL, thresholds = NULL, text = NULL)
 
     # Listen to "run_model" input
     toListen <- reactive({
@@ -256,13 +250,14 @@ mod_Diagnostic_server <- function(id, window_height) {
     # Observe toListen(), fit curves and update plot_output with fitted model if "run_model" is pressed
     observeEvent(toListen(), {
 
-      withProgress(message = "Fitting model, please wait...", {
+      withProgress(message = "Bootstrapping data, please wait...", {
 
         # Requirements before processing
         req(
           input$input_file
           ,input$col_label
           ,input$col_value
+          ,input$curve_type
           ,input$positive_label
           ,input$ci_width
         )
@@ -291,86 +286,77 @@ mod_Diagnostic_server <- function(id, window_height) {
           )
         )
 
-        # Fit logistic regression model
-        fit$model <- fitModelDiag(
+        # Fit curves
+        bootstrap <- calcCurves(
           data = df_diag
-          ,col_value = input$col_value
-          ,col_label = input$col_label
+          ,type = input$curve_type
+          ,value = input$col_value
+          ,label = input$col_label
           ,positive = input$positive_label
           ,ci_interval = input$ci_width
         )
 
-        fit$boxes <- calcDiagCoef(
+        fit$curves <- bootstrap$curves
+        fit$thresholds <- bootstrap$thresholds
+        fit$text <- bootstrap$text
+
+        # Bootstrapped curves
+        setProgress(50, "Plotting results...")
+        plot_output$curves <- plotCurves(
           data = df_diag
-          ,model = fit$model
-          ,col_value = input$col_value
+          ,type = input$curve_type
+          ,value = input$col_value
+          ,label = input$col_label
           ,positive = input$positive_label
-          ,ci_interval = input$ci_width
+          ,curves_data = fit$curves
+          ,threshold = median(fit$thresholds)
+          ,plot_height = window_height()
+          ,plot_width = window_width()
         )
 
-        # Model plot
-        setProgress(0.5, "Performing decision curve analysis...")
-        plot_output$curves <- plotDiag(
+        # Confusion matrix
+        plot_output$confmat <- plotConfMat(
           data = df_diag
-          ,model = fit$model
-          ,col_value = input$col_value
-          ,col_label = input$col_label
+          ,value = input$col_value
+          ,label = input$col_label
           ,positive = input$positive_label
-          ,ci_interval = input$ci_width
-          ,plot_dim = cdata
+          ,threshold = median(fit$thresholds)
         )
 
-        plot_output$dca <- plotDCA(
-          data = df_diag
-          ,model = fit$model
-          ,col_value = input$col_value
-          ,col_label = input$col_label
-          ,positive = input$positive_label
-          ,ci_interval = input$ci_width
-          ,plot_dim = cdata
-        )
-
-        plot_output$checks <- modelChecks(
-          model = fit$model
-          ,model_type = "logistic"
-          ,ci_interval = input$ci_width
+        # Histogram of bootstrapped thresholds
+        plot_output$thresholds <- plotThresholds(
+          data = fit$thresholds
+          ,plot_height = window_height()
+          ,plot_width = window_width()
         )
 
       })
 
     })
 
-    # Plot and box outputs
-    output$logistic_curves <- plotly::renderPlotly({
+    output$boot_curves <- renderPlot({
       plot_output$curves
     })
-    output$plot_model <- renderUI({
-      plotly::plotlyOutput(ns("logistic_curves"), height = window_height() * 0.6)
+    output$plot_curves <- renderUI({
+      plotOutput(ns("boot_curves"), height = window_height() * 0.6)
     })
 
-    output$dca_curves <- plotly::renderPlotly({
-      plot_output$dca
+    output$confmat <- renderPlot({
+      plot_output$confmat
     })
-    output$plot_dca <- renderUI({
-      plotly::plotlyOutput(ns("dca_curves"), height = window_height() * 0.6)
-    })
-
-    output$model_coefficients <- renderUI({
-      fit$boxes
+    output$plot_confmat <- renderUI({
+      plotOutput(ns("confmat"), height = window_height() * 0.6)
     })
 
-    # Model checks
-    output$mcmc_checks <- renderPlot({
-      plot_output$checks[[1]]
+    output$area_under_the_curve <- renderUI({
+      fit$text
     })
-    output$posteriors_checks <- renderPlot({
-      plot_output$checks[[2]]
+
+    output$thresholds <- renderPlot({
+      plot_output$thresholds
     })
-    output$mcmc_plot <- renderUI({
-      plotOutput(ns("mcmc_checks"), height = window_height() * 0.8)
-    })
-    output$posteriors_plot <- renderUI({
-      plotOutput(ns("posteriors_checks"), height = window_height() * 0.8)
+    output$plot_threshold <- renderUI({
+      plotOutput(ns("thresholds"), height = window_height() * 0.6)
     })
 
     ## This is a great bit of code, but is now obsolete

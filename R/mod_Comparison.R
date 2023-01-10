@@ -386,14 +386,14 @@ mod_Comparison_server <- function(id, window_height) {
           ,choices = "Bayesian posterior summary"
           ,selected = "Bayesian posterior summary"
         )
-        showTab(inputId = "comp_tabs", target = "Bayesian model results")
+        showTab(inputId = "comp_tabs", target = "Bayesian model diagnostics")
       } else {
         updateSelectInput(
           session
           ,"stat_method"
           ,choices = c("Select a method" = "", "Paired t-test", "Paired Wilcoxon (Mann-Whitney) test")
         )
-        hideTab(inputId = "comp_tabs", target = "Bayesian model results")
+        hideTab(inputId = "comp_tabs", target = "Bayesian model diagnostics")
       }
     })
 
@@ -567,7 +567,7 @@ mod_Comparison_server <- function(id, window_height) {
         )
 
         # Plot data from chosen model
-        setProgress(50, message = "Plotting data ...")
+        setProgress(0.5, message = "Plotting data ...")
         plot_output$plot <- plotComparison(
           data = df_comp
           ,method = input$reg_method
@@ -617,7 +617,7 @@ mod_Comparison_server <- function(id, window_height) {
         }
 
         # Bland-Altman analysis
-        setProgress(75, "Performing Bland-Altman analysis...")
+        setProgress(0.75, "Performing Bland-Altman analysis...")
         plot_output$ba_plot <- plotBlandAltman(
           data = df_comp
           ,method = input$altman_method

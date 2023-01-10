@@ -381,11 +381,11 @@ mod_Reference_server <- function(id, window_height) {
         )
 
         # Get bayes factor
-        setProgress(33, "Getting Bayes factors...")
+        setProgress(0.33, "Getting Bayes factors...")
         fit$bf <- getBayesFactor(model = fit$model, prior_location = input$prior_location)
 
         # Plots
-        setProgress(66, "Plotting results...")
+        setProgress(0.66, "Plotting results...")
         plot_output$plot <- plotRef(
           data = df_reference
           ,model = fit$model

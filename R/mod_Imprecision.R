@@ -400,6 +400,8 @@ mod_Imprecision_server <- function(id) {
 
         })
 
+        setProgress(0.5, "Extracting model information...")
+
         # Loop to extract model info into boxes
         fit$boxes <- lapply(seq_along(qc_levels), function(i) {
 

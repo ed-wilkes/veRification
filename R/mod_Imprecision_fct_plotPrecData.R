@@ -4,7 +4,7 @@
 #' @param x_var character string denoting column containing x values
 #' @param y_var character string denoting column containing y values
 #' @param qc_level numeric/character string denoting QC level
-#' @param col_level numeric/character string denoting colour
+#' @param col_level numeric/character string denoting column containing QC levels
 #' @param analyte character string denoting analyte name
 #'
 #' @return plotly object
@@ -24,13 +24,13 @@ plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte
       ,aes(
         text = paste0(
           "Day: ", !!sym(x_var), "\n"
-          ,"Value: ", round(!!sym(y_var), 2)
+          ,analyte, ": ", round(!!sym(y_var), 2)
         )
       )
     )+
     ggplot2::stat_summary(
       geom = "point"
-      ,fun.y = mean
+      ,fun = mean
       ,colour = "red2"
       ,size = 2
     )+
@@ -38,6 +38,10 @@ plotPrecData <- function(data, x_var, y_var, qc_level, col_level = NULL, analyte
     ggplot2::xlab("Day")+
     ggplot2::ylab(analyte)+
     plotTheme(font_size = 12)
-  return(ggplotly(p, tooltip = "text"))
+    # theme(plot.margin = margin(0, 0, 0, l = -3, "cm"))
+
+  p <- ggplotly(p, tooltip = "text")
+
+  return(p)
 
 }
