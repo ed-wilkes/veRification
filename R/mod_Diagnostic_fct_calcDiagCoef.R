@@ -38,12 +38,12 @@ calcDiagCoef <- function(data
     value_check <- "Fail"
     sub_check <- "Something has gone wrong with the Bayesian model. Interpret results with caution."
     colour_check <- "red"
-      icon_check <- "triangle-exclamation"
+    icon_check <- "triangle-exclamation"
   } else {
     value_check <- "Pass"
     sub_check <- "Bayesian model checks passed"
     colour_check <- "green"
-      icon_check <- "circle-check"
+    icon_check <- "circle-check"
   }
 
   # Generate value boxes
@@ -54,7 +54,7 @@ calcDiagCoef <- function(data
         value = intercept
         ,subtitle = paste0("Probability of ", positive, " at the median value of ", col_value)
         ,color = "blue"
-          ,width = width
+        ,width = width
       )
     )
     ,fluidRow(
@@ -62,7 +62,7 @@ calcDiagCoef <- function(data
         width = 12
         ,tags$i(
           paste0("NB: The numbers within parentheses represent the ", ci_interval,
-                 "% credible interval for this parameter based on a scaled, weakly informative prior distribution."
+                 "% credible interval for this parameter based on a weakly informative prior distribution."
           )
         )
       )
@@ -82,7 +82,7 @@ calcDiagCoef <- function(data
         width = 12
         ,tags$i(
           paste0("NB: The numbers within parentheses represent the ", ci_interval,
-                 "% credible interval for this parameter based on a scaled, weakly informative prior distribution."
+                 "% credible interval for this parameter based on a weakly informative prior distribution."
           )
         )
       )
