@@ -122,6 +122,7 @@ mod_Diagnostic_ui <- function(id) {
                 uiOutput(ns("model_coefficients"))
                 ,type = 6
               )
+              ,width = 4
             )
           )
         )
