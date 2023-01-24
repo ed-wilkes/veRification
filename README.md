@@ -1,7 +1,9 @@
 # veRification
 Shiny app for the analysis of laboratory assay verification data.
 
-This app can be installed as an R package using the following command (requiring the `devtools` R package):
+The app is currently hosted at [shinyapps.io](https://ed-wilkes.shinyapps.io/verification/)
+
+This app can be also be installed as an R package using the following command (requiring the `devtools` R package):
 
 `devtools::install_github("ed-wilkes/veRification", dependencies = TRUE)`
 
