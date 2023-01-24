@@ -1,3 +1,3 @@
-# veRification 0.1
+# veRification 1.0.0
 
-* First demo version of the veRification package
+* First version of the veRification package

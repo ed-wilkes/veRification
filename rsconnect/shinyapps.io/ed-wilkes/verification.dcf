@@ -1,0 +1,11 @@
+name: verification
+title:
+username:
+account: ed-wilkes
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8073988
+bundleId: 6768989
+url: https://ed-wilkes.shinyapps.io/verification/
+when: 1674575092.58964
+lastSyncTime: 1674575092.58965
