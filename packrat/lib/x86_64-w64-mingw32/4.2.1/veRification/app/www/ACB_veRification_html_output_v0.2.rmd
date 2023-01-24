@@ -1,0 +1,297 @@
+---
+title: Assay veRification report
+output: 
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: inline
+params: 
+  data_precision: NA
+  data_trueness: NA
+  data_comparison: NA
+  data_diagnostic: NA
+  options: NA
+  colours: NA
+  render_by_shiny: false
+---
+
+```{r setup, echo=FALSE}
+def <- knitr::knit_hooks$get("output")
+knitr::knit_hooks$set(output = function(x, options) {
+  x <- def(x, options)
+  ifelse(!is.null(options$suppress), gsub(pattern = "```.*```", "", x), x)
+})
+
+precision_report <- params$options$precision_report
+trueness_report <- params$options$trueness_report
+comparison_report <- params$options$comparison_report
+diagnostic_report <- params$options$diagnostic_report
+
+catHeader <- function(text = "", level = 3) {
+    cat(paste0("\n\n", 
+               paste(rep("#", level), collapse = ""), 
+               " ", text, "\n"))
+}
+```
+
+This report was generated on `r Sys.Date()` using the Assay veRification app available at: https://ed-wilkes.shinyapps.io/Assay_veRification
+
+******
+
+<!-- Imprecision report section -->
+```{r, imprecision_report, eval=precision_report, echo=FALSE, warning=FALSE, suppress=TRUE, message=FALSE, results='asis'}
+  cat("\n\n## Imprecision report {.tabset}\n")
+  
+  # Display data
+  cat("\n\n### Data\n")
+  DT::datatable(params$data_precision
+                ,class = "cell-border stripe"
+                ,rownames = FALSE
+                ,extensions = c("Buttons", "Scroller")
+                ,options = list(paging = TRUE
+                                ,scrollX = TRUE
+                                ,scroller = TRUE
+                                ,scrollY = 600
+                                ,searchHighight = TRUE)) %>%
+    DT::formatStyle(columns = colnames(params$data), fontSize = "100%")
+  
+  # Plot data
+  cat("\n\n### Plots\n")
+  qc_levels <- params$options$qc_levels
+  if (is.null(qc_levels)) {
+    qc_levels <- 1
+  }
+  
+  htmltools::tagList(
+    lapply(seq_along(qc_levels), function(i) {
+      
+      if (!is.null(params$options$rows_precision)) {
+        df_prec <- params$data_precision[-params$options$rows_precision, ]
+      } else {
+        df_prec <- params$data_precision
+      }
+      
+      plotPrecData(
+        data = df_prec
+        ,x_var = params$options$col_day
+        ,y_var = params$options$col_value
+        ,qc_level = i
+        ,col_level = params$options$col_level
+        ,analyte = params$options$analyte_precision
+      )
+      
+    }) # ends lapply
+  )
+  
+  # Summary statistics
+  cat("\n\n### Summary statistics\n")
+  
+  cat("\n\n## {-}\n")
+  cat("******")
+```
+
+<!-- Trueness report section -->
+```{r, trueness_report, eval=trueness_report, echo=FALSE, warning=FALSE, suppress=TRUE, message=FALSE, results='asis'}
+  cat("\n\n## Trueness report {.tabset}\n")
+  
+  # Display data
+  cat("\n\n### Data\n")
+  DT::datatable(params$data_trueness
+                ,class = "cell-border stripe"
+                ,rownames = FALSE
+                ,extensions = c("Buttons", "Scroller")
+                ,options = list(paging = TRUE
+                                ,scrollX = TRUE
+                                ,scroller = TRUE
+                                ,scrollY = 600
+                                ,searchHighight = TRUE))
+  
+  # Plot data
+  cat("\n\n### Plots\n")
+  if (!is.null(params$options$rows_trueness)) {
+    df_true <- params$data_trueness[-params$options$rows_trueness,]
+  } else {
+    df_true <- params$data_trueness
+  }
+  
+  if (!is.null(params$options$col_rep_1_trueness) && 
+      !is.null(params$options$col_rep_2_trueness) && 
+      params$options$duplicate_trueness == TRUE) {
+    
+    plotZScores(
+      data = df_true
+      ,option_var = params$options$var_option
+      ,col_mean = params$options$col_mean_trueness
+      ,col_var = params$options$col_var_trueness
+      ,col_n = params$options$col_n_trueness
+      ,col_value_1 = params$options$col_rep_1_trueness
+      ,col_value_2 = params$options$col_rep_2_trueness
+      ,plot_height = 600
+    )
+    
+  } else {
+    
+    plotZScores(
+      data = df_true
+      ,option_var = params$options$var_option
+      ,col_mean = params$options$col_mean_trueness
+      ,col_var = params$options$col_var_trueness
+      ,col_n = params$options$col_n_trueness
+      ,col_value_1 = params$options$col_rep_1_trueness
+      ,plot_height = 600
+    )
+    
+  }
+  
+  # Summary statistics
+  cat("\n\n### Summary statistics\n")
+  
+  cat("\n\n## {-}\n")
+  cat("******")
+```
+
+<!-- Method comparison report section -->
+```{r, comparison_report, eval=comparison_report, echo=FALSE, warning=FALSE, suppress=TRUE, message=FALSE, results='asis'}
+  cat("\n\n## Method comparison report {.tabset}\n")
+  
+  # Display data
+  cat("\n\n### Data\n")
+  DT::datatable(params$data_comparison
+                ,class = "cell-border stripe"
+                ,rownames = FALSE
+                ,extensions = c("Buttons", "Scroller")
+                ,options = list(paging = TRUE
+                                ,scrollX = TRUE
+                                ,scroller = TRUE
+                                ,scrollY = 600
+                                ,searchHighight = TRUE))
+  
+  # Plot data
+  cat("\n\n### Plots\n")
+  settings <- list(
+    as.numeric(params$options$var_x_comp)
+    ,as.numeric(params$options$var_y_comp)
+  )
+        
+  if (!is.null(params$options$rows_comparison)) {
+    df_comp <- params$data_comparison[-params$options$rows_comparison,]
+  } else {
+    df_comp <- params$data_comparison
+  }
+  
+  if (!is.null(params$options$col_ref_2) && 
+      !is.null(params$options$col_new_1) && 
+      params$options$duplicate_comparison == TRUE) {
+    
+    htmltools::tagList(
+      plotComparison(data = df_comp
+                     ,method = params$options$reg_method_comp
+                     ,settings = settings
+                     ,value_x1 = params$options$col_ref_1
+                     ,value_x2 = params$options$col_ref_2
+                     ,value_y1 = params$options$col_new_1
+                     ,value_y2 = params$options$col_new_2
+                     ,x_name = params$options$method_comparison_1
+                     ,y_name = params$options$method_comparison_2
+                     ,plot_height = 600
+      )
+      ,plotBlandAltman(data = df_comp
+                      ,method = params$options$altman_method_comp
+                      ,value_x1 = params$options$col_ref_1
+                      ,value_x2 = params$options$col_ref_2
+                      ,value_y1 = params$options$col_new_1
+                      ,value_y2 = params$options$col_new_2
+                      ,x_name = params$options$method_comparison_1
+                      ,y_name = params$options$method_comparison_2
+                      ,plot_height = 600
+      )
+    )
+    
+  } else {
+    
+    htmltools::tagList(
+      plotComparison(data = df_comp
+                     ,method = params$options$reg_method_comp
+                     ,settings = settings
+                     ,value_x1 = params$options$col_ref_1
+                     ,value_y1 = params$options$col_new_1
+                     ,x_name = params$options$method_comparison_1
+                     ,y_name = params$options$method_comparison_2
+                     ,plot_height = 600
+      )
+      ,plotBlandAltman(data = df_comp
+                       ,method = params$options$altman_method_comp
+                       ,value_x1 = params$options$col_ref_1
+                       ,value_x2 = params$options$col_ref_2
+                       ,value_y1 = params$options$col_new_1
+                       ,value_y2 = params$options$col_new_2
+                       ,x_name = params$options$method_comparison_1
+                       ,y_name = params$options$method_comparison_2
+                       ,plot_height = 600
+      )
+    )
+    
+  }
+  
+  # Summary statistics
+  cat("\n\n### Summary statistics\n")
+  
+  cat("\n\n## {-}\n")
+  cat("******")
+```
+
+<!-- Diagnostic report section -->
+```{r, diagnostic_report, eval=diagnostic_report, echo=FALSE, warning=FALSE, suppress=TRUE, message=FALSE, results='asis'}
+  cat("\n\n## Diagnostic performance report {.tabset}\n")
+  
+  # Display data
+  cat("\n\n### Data\n")
+  DT::datatable(params$data_diagnostic
+                ,class = "cell-border stripe"
+                ,rownames = FALSE
+                ,extensions = c("Buttons", "Scroller")
+                ,options = list(paging = TRUE
+                                ,scrollX = TRUE
+                                ,scroller = TRUE
+                                ,scrollY = 600
+                                ,searchHighight = TRUE))
+  
+  # Plot data
+  cat("\n\n### Plots\n")
+  if (!is.null(params$options$rows_diagnostic)) {
+    df_diag <- params$data_diagnostic[-params$options$rows_diagnostic,]
+  } else {
+    df_diag <- params$data_diagnostic
+  }
+  
+  plotAUC(data = df_diag
+          ,type = params$options$curve_type
+          ,value = params$options$col_diag_value
+          ,label = params$options$col_diag_label
+          ,positive = params$options$positive_label
+          ,plot_height = 600
+          ,plot_width = 600
+          ,threshold = params$options$slider_threshold
+  )
+  
+  plotConfMat(data = df_diag
+              ,value = params$options$col_diag_value
+              ,label = params$options$col_diag_label
+              ,positive = params$options$positive_label
+              ,threshold = params$options$slider_threshold
+  )
+  
+  # Summary statistics
+  cat("\n\n### Summary statistics\n")
+  
+  cat("\n\n## {-}\n")
+  cat("******")
+```
+  
+```{r, loading_bar, echo=FALSE, warning=FALSE, suppress=TRUE, message=FALSE, results='asis'}
+if (params$render_by_shiny == TRUE) {
+  shiny::setProgress(0.9, message = "Rendering complete. Saving file...")
+}
+```
