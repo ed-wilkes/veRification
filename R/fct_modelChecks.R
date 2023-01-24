@@ -15,9 +15,9 @@ modelChecks <- function(model, model_type, ci_interval) {
 
   if (model_type == "imprecision") {
 
-    posterior_samples <- as.data.frame(model) %>%
-      dplyr::select(1, ncol(as.data.frame(model)) - 1, ncol(as.data.frame(model))) %>%
-      dplyr::rename(Mean = 1, `Within-day SD (repeatability)` = 2, `Between-day SD (intermediate)` = 3) %>%
+    posterior_samples <- brms::as_draws_df(model) %>%
+      dplyr::select(1:3) %>%
+      dplyr::rename(Mean = 1, `Between-day SD (intermediate)` = 2, `Within-day SD (repeatability)` = 3) %>%
       dplyr::mutate(
         `Total laboratory CV (%)` = sqrt(`Within-day SD (repeatability)`^2 + `Between-day SD (intermediate)`^2) / Mean * 100
       ) %>%
@@ -101,9 +101,9 @@ modelChecks <- function(model, model_type, ci_interval) {
       )
 
     posteriors <- densities %>%
-      ggplot2::ggplot(aes(x = density_x, y = density_y))+
+      ggplot2::ggplot(ggplot2::aes(x = density_x, y = density_y))+
       ggplot2::geom_area(colour = "black", fill = "dodgerblue", alpha = 0.25)+
-      ggplot2::geom_area(data = filter(densities, density_x >= lwr & density_x <= upr), fill = "dodgerblue4", alpha = 0.5)+
+      ggplot2::geom_area(data = dplyr::filter(densities, density_x >= lwr & density_x <= upr), fill = "dodgerblue4", alpha = 0.5)+
       ggplot2::facet_wrap(~parameter, ncol = 1, scale = "free")+
       ggplot2::xlab("Parameter value")+
       ggplot2::ylab("Density (A.U.)")+
@@ -127,10 +127,10 @@ modelChecks <- function(model, model_type, ci_interval) {
       )
 
     posteriors <- densities %>%
-      ggplot2::ggplot(aes(x = density_x, y = density_y))+
+      ggplot2::ggplot(ggplot2::aes(x = density_x, y = density_y))+
       ggplot2::geom_area(colour = "black", fill = "dodgerblue", alpha = 0.25)+
-      ggplot2::geom_area(data = filter(densities, density_x >= lwr & density_x <= upr), fill = "dodgerblue4", alpha = 0.5)+
-      ggplot2::geom_vline(aes(xintercept = vline))+
+      ggplot2::geom_area(data = dplyr::filter(densities, density_x >= lwr & density_x <= upr), fill = "dodgerblue4", alpha = 0.5)+
+      ggplot2::geom_vline(ggplot2::aes(xintercept = vline))+
       ggplot2::facet_wrap(~parameter, ncol = 1, scale = "free")+
       ggplot2::xlab("Parameter value")+
       ggplot2::ylab("Density (A.U.)")+
@@ -143,8 +143,14 @@ modelChecks <- function(model, model_type, ci_interval) {
 
   traces <- posterior_samples %>%
     dplyr::filter(parameter != "Total laboratory CV (%)") %>%
-    ggplot2::ggplot(aes(x = .iteration, y = value))+
-    ggplot2::geom_step(aes(colour = as.factor(.chain)), alpha = 0.5, stat = "summary_bin", binwidth = binwidth, fun = "median", linewidth = 1)+
+    ggplot2::ggplot(ggplot2::aes(x = .iteration, y = value))+
+    ggplot2::geom_step(
+      ggplot2::aes(colour = as.factor(.chain))
+      ,alpha = 0.5
+      ,stat = "summary_bin"
+      ,binwidth = binwidth
+      ,fun = "median", linewidth = 1
+    )+
     ggplot2::facet_wrap(~parameter, ncol = 1, scale = "free")+
     ggplot2::xlab("Iteration")+
     ggplot2::ylab("Parameter value")+

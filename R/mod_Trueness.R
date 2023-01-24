@@ -117,12 +117,12 @@ mod_Trueness_ui <- function(id) {
               ,collapsible = TRUE
               ,status = "primary"
               ,numericInput(
-                inputId = "var_x"
+                inputId = ns("var_x")
                 ,label = "Enter the variance of method 1:"
                 ,value = 1
               )
               ,numericInput(
-                inputId = "var_y"
+                inputId = ns("var_y")
                 ,label = "Enter the variance of method 2:"
                 ,value = 1
               )

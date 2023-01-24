@@ -41,7 +41,7 @@ fitModelRef <- function(data
       ,cols = c(any_of(col_value_1), any_of(col_value_2))
       ,values_to = "value"
     ) %>%
-      mutate(Distribution = "data")
+      dplyr::mutate(Distribution = "data")
 
     sd_y <- sd(data$value)
     form <- paste0("value ~ 1 + (1|", col_sample, ")") # includes duplicates as varying effects

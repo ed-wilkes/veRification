@@ -26,7 +26,7 @@ plotDiag <- function(data
   # Change outcome to binary integer
   data <- data %>%
     dplyr::mutate(
-      outcome_ = dplyr::if_else(!!sym(col_label) == positive, true = 1, false = 0)
+      outcome_ = dplyr::if_else(!!rlang::sym(col_label) == positive, true = 1, false = 0)
     )
 
   # Get conditional effects
@@ -40,14 +40,14 @@ plotDiag <- function(data
     dplyr::mutate(value_scaled = value_centred + median(data[[col_value]], na.rm = TRUE))
 
   # Make plot
-  p <- ggplot2::ggplot(cond, aes(x = value_scaled, y = estimate__))+
-    ggplot2::geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = 0.5, fill = "grey70")+
+  p <- ggplot2::ggplot(cond, ggplot2::aes(x = value_scaled, y = estimate__))+
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = lower__, ymax = upper__), alpha = 0.5, fill = "grey70")+
     ggplot2::geom_line(
       colour = "blue2", linewidth = 1, alpha = 0.75
     )+
     ggplot2::geom_point(
       data = data
-      ,aes(x = !!sym(col_value), y = outcome_)
+      ,ggplot2::aes(x = !!rlang::sym(col_value), y = outcome_)
       ,alpha = 0.5,
     )+
     ggplot2::geom_vline(

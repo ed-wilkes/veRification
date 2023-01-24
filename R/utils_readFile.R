@@ -8,6 +8,7 @@
 #'
 #' @examples
 readFile <- function(file, headings){
+
   inFile <- file
   if (is.null(inFile)) return(NULL)
 

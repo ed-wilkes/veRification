@@ -18,7 +18,8 @@ boxesPrec <- function(model, x_var, colours, qc_level, test_claims, claims_data,
   width <- 3
 
   # Basic model checks
-  if (any(summary(model)[,"Rhat"] > 1.1) || any(summary(model)[,"n_eff"] / 4000 < 0.1)) {
+
+  if (any(brms::rhat(model) > 1.1) || any(brms::neff_ratio(model)[1:2] < 0.1)) {
     value_check <- "Fail"
     sub_check <- "Something has gone wrong with the Bayesian model. Interpret results with caution."
     colour_check <- "red"
@@ -38,11 +39,11 @@ boxesPrec <- function(model, x_var, colours, qc_level, test_claims, claims_data,
   # Get parameters
   post_mean <- median(as.matrix(model)[,1])
   post_cv_within <- median((as.matrix(model)[,"sigma"] / as.matrix(model)[,1]) * 100)
-  post_cv_between <- median((as.matrix(model)[,paste0("Sigma[", x_var, ":(Intercept),(Intercept)]")] / as.matrix(model)[,1]) * 100)
-  dist_sd_total <- sqrt(as.matrix(model)[,"sigma"]^2 + as.matrix(model)[,paste0("Sigma[", x_var, ":(Intercept),(Intercept)]")]^2)
+  post_cv_between <- median((as.matrix(model)[,paste0("sd_", x_var, "__Intercept")] / as.matrix(model)[,1]) * 100)
+  dist_sd_total <- sqrt(as.matrix(model)[,"sigma"]^2 + as.matrix(model)[,paste0("sd_", x_var, "__Intercept")]^2)
   dist_cv_total <- (dist_sd_total / as.matrix(model)[,1]) * 100
   post_sd_total <- median(dist_sd_total)
-  post_total_cv <- format(round(quantile(dist_cv_total, c(ci_lwr, 0.5, ci_upr)), 1), nsmall = 1)
+  post_total_cv <- gsub(" ", "", format(round(quantile(dist_cv_total, c(ci_lwr, 0.5, ci_upr)), 1), nsmall = 1))
   post_cv_str <- paste0(post_total_cv[2], " (", post_total_cv[1], ", ", post_total_cv[3], ")")
 
   # Test against claims

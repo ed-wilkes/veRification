@@ -47,17 +47,17 @@ plotBlandAltman <- function(data
   limit_lwr <- mean_diff - qnorm(ci_prob) * sd_diff
 
   # Plot data
-  p <- ggplot2::ggplot(data, aes(x = !!sym(value_x1), y = difference))+
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = !!rlang::sym(value_x1), y = difference))+
     ggplot2::geom_hline(yintercept = 0, alpha = 0.5, colour = "red2")+
     ggplot2::geom_hline(yintercept = mean_diff, alpha = 0.5, linetype = "dashed", colour = "mediumorchid4")+
     ggplot2::geom_hline(yintercept = limit_upr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
     ggplot2::geom_hline(yintercept = limit_lwr, alpha = 0.5, linetype = "dashed", colour = "forestgreen")+
     ggplot2::geom_point(
       alpha = 0.5
-      ,aes(
+      ,ggplot2::aes(
         text = paste0(
-          x_name, ": ", round(!!sym(value_x1), 2), "\n"
-          ,y_name, ": ", round(!!sym(value_y1), 2), "\n"
+          x_name, ": ", round(!!rlang::sym(value_x1), 2), "\n"
+          ,y_name, ": ", round(!!rlang::sym(value_y1), 2), "\n"
           ,method, " difference: ", round(difference, 2)
         )
       )
@@ -67,6 +67,6 @@ plotBlandAltman <- function(data
     ggplot2::ylab(paste0(method, " difference (", y_name, " vs ", x_name,")"))+
     ggplot2::expand_limits(x = 0)
 
-  return(ggplotly(p, tooltip = "text", height = plot_height * 0.6))
+  return(plotly::ggplotly(p, tooltip = "text", height = plot_height * 0.6))
 
 }

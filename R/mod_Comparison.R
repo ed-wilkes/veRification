@@ -645,13 +645,13 @@ mod_Comparison_server <- function(id, window_height) {
     })
 
     # Model fit plot
-    output$model_fit <- renderPlotly({
+    output$model_fit <- plotly::renderPlotly({
       plot_output$plot
     })
 
     # Dynamic UI to display plot
     output$plot <- renderUI({
-      plotlyOutput(ns("model_fit"))
+      plotly::plotlyOutput(ns("model_fit"))
     })
 
     # Model parameters/coefficients

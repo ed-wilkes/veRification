@@ -30,7 +30,7 @@ plotDCA <- function(data
   data <- data %>%
     dplyr::mutate(
       outcome_ = factor(
-        dplyr::if_else(!!sym(col_label) == positive, true = 1, false = 0)
+        dplyr::if_else(!!rlang::sym(col_label) == positive, true = 1, false = 0)
         ,levels = c(0, 1)
       )
     )
@@ -108,10 +108,10 @@ plotDCA <- function(data
     )
 
   # Make plot
-  p <- ggplot2::ggplot(df_results_sum, aes(x = probability, y = median_benefit))+
-    ggplot2::geom_line(data = df_results, aes(y = net_benefit, group = iter), alpha = 0.1, colour = "grey70")+
+  p <- ggplot2::ggplot(df_results_sum, ggplot2::aes(x = probability, y = median_benefit))+
+    ggplot2::geom_line(data = df_results, ggplot2::aes(y = net_benefit, group = iter), alpha = 0.1, colour = "grey70")+
     ggplot2::geom_hline(yintercept = 0, colour = "forestgreen", linewidth = 1, alpha = 0.75)+
-    ggplot2::geom_line(aes(y = all_benefit), colour = "mediumorchid4", linewidth = 1, alpha = 0.75)+
+    ggplot2::geom_line(ggplot2::aes(y = all_benefit), colour = "mediumorchid4", linewidth = 1, alpha = 0.75)+
     ggplot2::geom_line(colour = "blue2", linewidth = 1, alpha = 0.75)+
     plotTheme(font_size = 12)+
     ggplot2::xlab(paste0("Threshold probability of ", positive))+

@@ -33,7 +33,6 @@ calcCompCoef <- function(data
 
   }
 
-
   return(text)
 
 }

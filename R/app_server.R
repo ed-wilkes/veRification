@@ -3,13 +3,11 @@
 #' @param input,output,session Internal parameters for {shiny}.
 #'     DO NOT REMOVE.
 #' @import shiny
-#' @import ggplot2
 #' @importFrom magrittr "%>%"
-#' @import plotly
-#' @noRd
+  #' @noRd
 app_server <- function(input, output, session) {
 
-  ## General functions ----
+  # General functions ----
   window_height <- reactive({ifelse(is.null(input$height), 0, as.numeric(input$height))})
   window_width <- reactive({ifelse(is.null(input$width), 0, as.numeric(input$width))})
   # markdown_file <- normalizePath("inst/app/www/ACB_veRification_html_output_v0.2.Rmd")

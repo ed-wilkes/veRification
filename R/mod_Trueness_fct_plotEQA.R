@@ -49,16 +49,20 @@ plotEQA <- function(data
     beta_0 <- model@glob.coef[1]
     beta_1 <- model@glob.coef[2]
 
-    p <- ggplot2::ggplot(data, aes(x = !!sym(col_mean), y = mean_sample))+
+    p <- ggplot2::ggplot(data, ggplot2::aes(x = !!rlang::sym(col_mean), y = mean_sample))+
       ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
       ggplot2::geom_errorbarh(
-        aes(y = mean_sample, xmin = !!sym(col_mean) - !!sym(col_var), xmax = !!sym(col_mean) + !!sym(col_var))
+        ggplot2::aes(
+          y = mean_sample
+          ,xmin = !!rlang::sym(col_mean) - !!rlang::sym(col_var)
+          ,xmax = !!rlang::sym(col_mean) + !!rlang::sym(col_var)
+        )
         ,height = 0
         ,alpha = 0.5
       )+
       ggplot2::geom_point(
         alpha = 0.5
-        ,aes(
+        ,ggplot2::aes(
           text = paste0(
             "EQA value: ", round(mean, 2), "\n"
             ,"Measured value: ", round(mean_sample, 2)
@@ -80,7 +84,7 @@ plotEQA <- function(data
     if (!is.null(col_value_2) && col_value_2 != "") {
 
       p <- p + ggplot2::geom_errorbar(
-        aes(ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
+        ggplot2::aes(ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
         ,width = 0
         ,alpha = 0.5
       )
@@ -96,24 +100,28 @@ plotEQA <- function(data
     }
 
     p <- model %>%
-      tidybayes::spread_draws(b_Intercept, !!sym(coef_str), ndraws = 100, seed = 1234) %>%
+      tidybayes::spread_draws(b_Intercept, !!rlang::sym(coef_str), ndraws = 100, seed = 1234) %>%
       dplyr::mutate(
         x = min_x
         ,xend = max_x
-        ,y = b_Intercept + !!sym(coef_str) * x
-        ,yend = b_Intercept + !!sym(coef_str) * xend
+        ,y = b_Intercept + !!rlang::sym(coef_str) * x
+        ,yend = b_Intercept + !!rlang::sym(coef_str) * xend
       ) %>%
       ggplot2::ggplot()+
       ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
       ggplot2::geom_errorbarh(
         data = data
-        ,aes(y = mean_sample, xmin = !!sym(col_mean) - !!sym(col_var), xmax = !!sym(col_mean) + !!sym(col_var))
+        ,ggplot2::aes(
+          y = mean_sample
+          ,xmin = !!rlang::sym(col_mean) - !!rlang::sym(col_var)
+          ,xmax = !!rlang::sym(col_mean) + !!rlang::sym(col_var)
+        )
         ,height = 0
         ,alpha = 0.5
       )+
       ggplot2::geom_point(
         data = data
-        ,aes(
+        ,ggplot2::aes(
           x = mean
           ,y = mean_sample
           ,text = paste0(
@@ -123,7 +131,7 @@ plotEQA <- function(data
         )
         ,alpha = 0.5
       )+
-      ggplot2::geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
+      ggplot2::geom_segment(ggplot2::aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
       plotTheme(font_size = 12)+
       ggplot2::xlab("EQA results")+
       ggplot2::ylab("Measured values")+
@@ -134,7 +142,7 @@ plotEQA <- function(data
 
       p <- p + ggplot2::geom_errorbar(
         data = data
-        ,aes(x = mean, ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
+        ,ggplot2::aes(x = mean, ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
         ,width = 0
         ,alpha = 0.5
       )
@@ -143,5 +151,5 @@ plotEQA <- function(data
 
   }
 
-  return(ggplotly(p, tooltip = "text", height = plot_height * 0.8))
+  return(plotly::ggplotly(p, tooltip = "text", height = plot_height * 0.8))
 }

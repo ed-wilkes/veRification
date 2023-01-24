@@ -6,7 +6,7 @@
 #' @param qc_level character string/numeric denoting QC level
 #' @param col_level character string denoting colour for output
 #'
-#' @return rstanarm model object
+#' @return brms model object
 #' @export
 #'
 #' @examples
@@ -16,8 +16,10 @@ fitModelPrec <- function(data
                          ,qc_level
                          ,col_level) {
 
+  require(brms)
+
   if (!is.null(col_level)) {
-    df_filter <- dplyr::filter(data, .data[[col_level]] == qc_level)
+    df_filter <- dplyr::filter(data, !!rlang::sym(col_level) == qc_level)
   } else {
     df_filter <- data
   }
@@ -27,16 +29,37 @@ fitModelPrec <- function(data
   mean_y <- mean(data[[y_var]])
   sd_y <- sd(data[[y_var]])
 
-  # Use rstanarm due to greater speed compared to brms
-  fit <- rstanarm::stan_lmer(
-    formula = form
+  stanvars <- brms::stanvar(mean_y, name = "mean_y")+
+    brms::stanvar(sd_y, name = "sd_y")
+
+  # Can't use rstanarm due to difficulties with the StanHeaders and rstan versions (2023/01/24)
+  # brms requires v2.26.13 of both packages to run, but the application won't deploy due to
+  # rstanarm's dependencies. Moved to brms, despite slower performance.
+
+  # fit <- rstanarm::stan_lmer(
+  #   formula = form
+  #   ,data = df_filter
+  #   ,prior_intercept = normal(mean_y, 2.5 * sd_y, autoscale = FALSE)
+  #   ,prior_aux = exponential(1 / sd_y, autoscale = FALSE)
+  #   ,seed = 1234
+  #   ,iter = 4000 # arbitrary number of samples to get stable estimates
+  #   ,cores = 4
+  #   ,adapt_delta = 0.999 # arbitrarily high to fit most models
+  # )
+
+  fit <- brms::brm(
+    formula = brms::bf(form)
     ,data = df_filter
-    ,prior_intercept = normal(mean_y, 2.5 * sd_y, autoscale = FALSE)
-    ,prior_aux = exponential(1 / sd_y, autoscale = FALSE)
+    ,prior = c(
+      prior(normal(mean_y, 2.5 * sd_y), class = "Intercept")
+      ,prior(exponential(1 / sd_y), class = "sd")
+      ,prior(exponential(1 / sd_y), class = "sigma")
+    )
     ,seed = 1234
-    ,iter = 4000 # arbitrary number of samples to get stable estimates
+    ,iter = 4000
     ,cores = 4
-    ,adapt_delta = 0.999 # arbitrarily high to fit most models
+    ,control = list(adapt_delta = 0.999, max_treedepth = 15)
+    ,stanvars = stanvars
   )
 
   return(fit)

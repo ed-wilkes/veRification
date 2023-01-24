@@ -54,14 +54,14 @@ plotComparison <- function(data
     beta_0 <- model@glob.coef[1]
     beta_1 <- model@glob.coef[2]
 
-    p <- ggplot2::ggplot(data, aes(x = !!sym(value_x1), y = !!sym(value_y1)))+
+    p <- ggplot2::ggplot(data, ggplot2::aes(x = !!rlang::sym(value_x1), y = !!rlang::sym(value_y1)))+
       ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
       ggplot2::geom_point(
         alpha = 0.5
-        ,aes(
+        ,ggplot2::aes(
           text = paste0(
-          x_name, ": ", round(!!sym(value_x1), 2), "\n"
-          ,y_name, ": ", round(!!sym(value_y1), 2)
+          x_name, ": ", round(!!rlang::sym(value_x1), 2), "\n"
+          ,y_name, ": ", round(!!rlang::sym(value_y1), 2)
           )
         )
       )+
@@ -80,12 +80,12 @@ plotComparison <- function(data
     if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
 
       p <- p + ggplot2::geom_errorbar(
-        aes(ymin = mean_y - sd_y, ymax = mean_y + sd_y)
+        ggplot2::aes(ymin = mean_y - sd_y, ymax = mean_y + sd_y)
         ,width = 0
         ,alpha = 0.5
       )+
         ggplot2::geom_errorbarh(
-          aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
+          ggplot2::aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
           ,width = 0
           ,alpha = 0.5
         )
@@ -94,28 +94,28 @@ plotComparison <- function(data
   } else {
 
     p <- model %>%
-      tidybayes::spread_draws(b_Intercept, !!sym(coef_str), ndraws = 100, seed = 1234) %>%
+      tidybayes::spread_draws(b_Intercept, !!rlang::sym(coef_str), ndraws = 100, seed = 1234) %>%
       dplyr::mutate(
         x = min_x
         ,xend = max_x
-        ,y = b_Intercept + !!sym(coef_str) * x
-        ,yend = b_Intercept + !!sym(coef_str) * xend
+        ,y = b_Intercept + !!rlang::sym(coef_str) * x
+        ,yend = b_Intercept + !!rlang::sym(coef_str) * xend
       ) %>%
       ggplot2::ggplot()+
       ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
       ggplot2::geom_point(
         data = data
-        ,aes(
-          x = !!sym(value_x1)
-          ,y = !!sym(value_y1)
+        ,ggplot2::aes(
+          x = !!rlang::sym(value_x1)
+          ,y = !!rlang::sym(value_y1)
           ,text = paste0(
-            x_name, ": ", round(!!sym(value_x1), 2), "\n"
-            ,y_name, ": ", round(!!sym(value_y1), 2)
+            x_name, ": ", round(!!rlang::sym(value_x1), 2), "\n"
+            ,y_name, ": ", round(!!rlang::sym(value_y1), 2)
           )
         )
         ,alpha = 0.5
       )+
-      ggplot2::geom_segment(aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
+      ggplot2::geom_segment(ggplot2::aes(x = x, xend = xend, y = y, yend = yend), alpha = 0.05, colour = "blue2")+
       plotTheme(font_size = 12)+
       ggplot2::xlab(x_name)+
       ggplot2::ylab(y_name)+
@@ -125,13 +125,13 @@ plotComparison <- function(data
 
       p <- p + ggplot2::geom_errorbar(
         data = data
-        ,aes(x = mean_x, ymin = mean_y - sd_y, ymax = mean_y + sd_y)
+        ,ggplot2::aes(x = mean_x, ymin = mean_y - sd_y, ymax = mean_y + sd_y)
         ,width = 0
         ,alpha = 0.5
       )+
         ggplot2::geom_errorbarh(
           data = data
-          ,aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
+          ,ggplot2::aes(y = mean_y, xmin = mean_x - sd_x, xmax = mean_x + sd_x)
           ,height = 0
           ,alpha = 0.5
         )
@@ -139,6 +139,6 @@ plotComparison <- function(data
 
   }
 
-  return(ggplotly(p, tooltip = "text", height = plot_height * 0.8))
+  return(plotly::ggplotly(p, tooltip = "text", height = plot_height * 0.8))
 
 }

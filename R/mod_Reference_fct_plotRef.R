@@ -33,13 +33,13 @@ plotRef <- function(data
   p <- plot(bayes_factor)+
     ggplot2::geom_density(
       data = data
-      ,aes(x = value, y = ..density..)
+      ,ggplot2::aes(x = value, y = ..density..)
       ,adjust = 2
       ,alpha = 0.25
       ,size = 1
     )+
-    xlab("Measurand value")+
-    ylab("Density (A.U.)")+
+    ggplot2::xlab("Measurand value")+
+    ggplot2::ylab("Density (A.U.)")+
     plotTheme(12)
 
   return(p)

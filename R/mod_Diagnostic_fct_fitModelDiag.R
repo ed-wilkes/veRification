@@ -19,7 +19,6 @@ fitModelDiag <- function(data
   # Load brms
   require(brms)
 
-
   # Mutate the outcome variable to integer
   cases <- as.character(unique(data[[col_label]]))
   if (length(cases) > 2) {
@@ -29,8 +28,8 @@ fitModelDiag <- function(data
   # Centre data to the median and change outcome to binary integer
   data <- data %>%
     dplyr::mutate(
-      outcome = dplyr::if_else(!!sym(col_label) == positive, true = 1, false = 0)
-      ,value_centred = !!sym(col_value) - median(!!sym(col_value), na.rm = TRUE)
+      outcome = dplyr::if_else(!!rlang::sym(col_label) == positive, true = 1, false = 0)
+      ,value_centred = !!rlang::sym(col_value) - median(!!rlang::sym(col_value), na.rm = TRUE)
     )
 
   # Full measurement error model

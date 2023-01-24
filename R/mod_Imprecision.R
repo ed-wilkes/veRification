@@ -303,7 +303,7 @@ mod_Imprecision_server <- function(id) {
       ,checks = NULL # list of fluidRow -> box -> renderPlot -> ggplot2 objects
     )
     fit <- reactiveValues(
-      models = NULL # list of rstanarm model objects
+      models = NULL # list of brms model objects
       ,boxes = NULL # list of fluidRow -> box
     )
 
