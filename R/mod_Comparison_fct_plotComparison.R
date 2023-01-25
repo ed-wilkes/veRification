@@ -53,9 +53,11 @@ plotComparison <- function(data
 
     beta_0 <- model@glob.coef[1]
     beta_1 <- model@glob.coef[2]
+    df_band <- as.data.frame(mcr::calcResponse(model, x.levels = seq(min_x, max_x, length.out = 200)))
 
     p <- ggplot2::ggplot(data, ggplot2::aes(x = !!rlang::sym(value_x1), y = !!rlang::sym(value_y1)))+
       ggplot2::geom_abline(slope = 1, intercept = 0, alpha = 0.5, linetype = "dashed", colour = "red2")+
+      ggplot2::geom_ribbon(data = df_band, ggplot2::aes(x = X, y = NULL, ymin = Y.LCI, ymax = Y.UCI), fill = "grey80", alpha = 0.5)+
       ggplot2::geom_point(
         alpha = 0.5
         ,ggplot2::aes(
