@@ -63,30 +63,33 @@ plotDCA <- function(data
     dplyr::group_split(iter)
 
   # Perform DCA across all probability thresholds (as fast as I could get it!)
+  performDCA <- function(x, data) {
+
+    df_pred <- data %>%
+      dplyr::mutate(prediction = dplyr::if_else(!!sym(col_value) > as.numeric(x[2]), 1, 0))
+
+    conf_mat <- table(df_pred$prediction, df_pred$outcome_) %>%
+      as.data.frame() %>%
+      dplyr::rename(pred = Var1, ref = Var2)
+
+    tp_rate <- conf_mat$Freq[4] / sum(conf_mat$Freq)
+    fp_rate <- conf_mat$Freq[2] / sum(conf_mat$Freq)
+    net_benefit <- tp_rate - as.numeric(x[5]) * fp_rate
+    return(net_benefit)
+
+  }
+
   df_results <- lapply(
     seq_along(list_draws)
     ,function(i) {
-
       results <- list_draws[[i]]
-
       results$net_benefit <- apply(
         results
         ,MARGIN = 1
-        ,function(x) {
-          df_pred <- data %>%
-            dplyr::mutate(prediction = dplyr::if_else(!!sym(col_value) > as.numeric(x[2]), 1, 0))
-          conf_mat <- table(df_pred$prediction, df_pred$outcome_) %>%
-            as.data.frame() %>%
-            dplyr::rename(pred = Var1, ref = Var2)
-          tp_rate <- conf_mat$Freq[4] / sum(conf_mat$Freq)
-          fp_rate <- conf_mat$Freq[2] / sum(conf_mat$Freq)
-          net_benefit <- tp_rate - as.numeric(x[5]) * fp_rate
-          return(net_benefit)
-        }
+        ,performDCA # function defined above
+        ,data = data
       )
-
       return(results)
-
     }
   ) %>%
     dplyr::bind_rows() %>%
