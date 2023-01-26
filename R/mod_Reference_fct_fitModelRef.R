@@ -77,6 +77,7 @@ fitModelRef <- function(data
     ,control = list(adapt_delta = 0.99)
     ,seed = 123
     ,cores = 4
+    ,refresh = 0
     ,stanvars = stanvars
   )
 

@@ -94,6 +94,7 @@ fitModelComp <- function(data
         ,seed = 1234 # for reproducibility
         ,iter = 4000
         ,cores = 4
+        ,refresh = 0
         ,control = list(
           adapt_delta = 0.9999
           ,max_treedepth = 15

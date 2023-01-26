@@ -15,7 +15,7 @@ mod_Imprecision_ui <- function(id) {
   tagList(
 
     tabsetPanel(
-      id = ns("precision_tabs")
+      id = ns("imprecision_tabs")
 
       # Data input
       ,tabPanel(
@@ -47,6 +47,31 @@ mod_Imprecision_ui <- function(id) {
               inputId = ns("analyte_name")
               ,label = "Enter your analyte's name:"
               ,placeholder = "e.g., 'Free T4 (pmol/L)'"
+            )
+          )
+          ,conditionalPanel(
+            condition = paste0("output[\'", ns("file"), "\'] == true")
+            ,box(
+              title = "Analysis settings"
+              ,solidHeader = TRUE
+              ,collapsible = TRUE
+              ,status = "primary"
+              ,selectInput(
+                inputId = ns("method")
+                ,multiple = FALSE
+                ,label = "Select the analysis method you wish to use:"
+                ,choices = c(
+                  "Select a method" = ""
+                  ,"Bayesian"
+                  ,"Frequentist (REML)"
+                )
+              )
+              ,actionButton(
+                inputId = ns("run_model")
+                ,label = "Fit model(s)"
+                ,icon = icon("play")
+                ,width = "100%"
+              )
             )
           )
         )
@@ -88,12 +113,6 @@ mod_Imprecision_ui <- function(id) {
               ,checkboxInput(
                 inputId = ns("cv_claims_test")
                 ,label = "Test against manufacturer's claims?"
-              )
-              ,actionButton(
-                inputId = ns("run_model")
-                ,label = "Fit model(s)"
-                ,icon = icon("play")
-                ,width = "100%"
               )
               ,width = 3
             )
@@ -210,6 +229,14 @@ mod_Imprecision_server <- function(id) {
       )
     })
 
+    observe({
+      if (input$method == "Bayesian") {
+        showTab(inputId = "imprecision_tabs", target = "Bayesian model diagnostics")
+      } else {
+        hideTab(inputId = "imprecision_tabs", target = "Bayesian model diagnostics")
+      }
+    })
+
     # Data checks
     observeEvent(input$input_file, {
       checkInputFile(input, "input_file")
@@ -318,7 +345,7 @@ mod_Imprecision_server <- function(id) {
       withProgress(message = "Fitting model(s), please wait...", {
 
         # Requirements before processing
-        req(input$col_day, input$col_value, input$col_level, input$ci_width)
+        req(input$col_day, input$col_value, input$col_level, input$ci_width, input$method)
 
         # Get QC levels and claims
         colours <- c("teal", "aqua", "blue", "navy", "black")
@@ -361,7 +388,7 @@ mod_Imprecision_server <- function(id) {
         )
 
         # Update focus to plots tab
-        updateTabsetPanel(session, "precision_tabs", selected = "precision_tab_plots")
+        updateTabsetPanel(session, "imprecision_tabs", selected = "precision_tab_plots")
 
         # Loop to plot data
         plot_output$plots <- lapply(seq_along(qc_levels), function(i) {
@@ -398,6 +425,7 @@ mod_Imprecision_server <- function(id) {
             ,y_var = input$col_value
             ,qc_level = i
             ,col_level = input$col_level
+            ,method = input$method
           )
 
         })
@@ -422,41 +450,46 @@ mod_Imprecision_server <- function(id) {
                 ,test_claims = input$cv_claims_test
                 ,claims_data = claim_values
                 ,ci_interval = input$ci_width
+                ,method = input$method
               )
             )
           )
 
         })
 
-        # Loop to extract model checks
-        plot_output$checks <- lapply(seq_along(qc_levels), function(i) {
+        if (input$method == "Bayesian") {
 
-          check_plots <- modelChecks(
-            model = fit$models[[i]]
-            ,model_type = "imprecision"
-            ,ci_interval = input$ci_width
-          )
+          # Loop to extract model checks
+          plot_output$checks <- lapply(seq_along(qc_levels), function(i) {
 
-          fluidRow(
-            box(
-              title = paste0("QC level ", i)
-              ,collapsible = TRUE
-              ,solidHeader = TRUE
-              ,status = "primary"
-              ,width = 12
-              ,column(
-                width = 6
-                ,renderPlot(check_plots[[1]])
-              )
-              ,column(
-                width = 6
-                ,renderPlot(check_plots[[2]])
-              )
-
+            check_plots <- modelChecks(
+              model = fit$models[[i]]
+              ,model_type = "imprecision"
+              ,ci_interval = input$ci_width
             )
-          )
 
-        })
+            fluidRow(
+              box(
+                title = paste0("QC level ", i)
+                ,collapsible = TRUE
+                ,solidHeader = TRUE
+                ,status = "primary"
+                ,width = 12
+                ,column(
+                  width = 6
+                  ,renderPlot(check_plots[[1]])
+                )
+                ,column(
+                  width = 6
+                  ,renderPlot(check_plots[[2]])
+                )
+
+              )
+            )
+
+          })
+
+        }
 
       }) # ends withProgress
 
