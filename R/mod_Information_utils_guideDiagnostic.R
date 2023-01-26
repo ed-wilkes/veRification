@@ -25,7 +25,7 @@ guideDiagnostic <- function() {
 
        <p style='margin-left: 20px'>
        <b>Model fit:</b><br>
-       - The posterior draws of the expected value of the posterior predictive distribution of the model are plotted against the input data
+       - The posterior draws of the expected value of the posterior predictive distribution of the model are plotted against the input data<br>
        <br>
 
       <b>Model coefficients:</b><br>
