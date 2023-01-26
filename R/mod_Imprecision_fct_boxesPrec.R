@@ -154,7 +154,7 @@ boxesPrec <- function(model
 
   }
 
-  font_size <- "font-size: 95%;"
+  font_size <- "font-size: 90%;"
 
   # If tested against claims
   if (test_claims == TRUE && !is.null(claims_data)) {
