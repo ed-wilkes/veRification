@@ -31,7 +31,8 @@ Imports:
     StanHeaders (>= 2.26.13),
     stringr,
     tidybayes,
-    tidyr
+    tidyr,
+    VCA
 Suggests: 
     knitr,
     testthat (>= 3.0.0)
