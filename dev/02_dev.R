@@ -31,7 +31,6 @@ usethis::use_package( "plotly" )
 usethis::use_package( "readxl" )
 usethis::use_package( "rlist" )
 usethis::use_package( "rstan" )
-# usethis::use_package( "rstanarm" )
 usethis::use_package( "shinycssloaders" )
 usethis::use_package( "shinydashboard" )
 usethis::use_package( "shinydashboardPlus" )
@@ -40,7 +39,7 @@ usethis::use_package( "StanHeaders" )
 usethis::use_package( "stringr" )
 usethis::use_package( "tidybayes" )
 usethis::use_package( "tidyr" )
-usethis::use_package( "yardstick" )
+usethis::use_package( "VCA" )
 
 ## Add internal datasets ----
 ## If you have data in your package
@@ -48,7 +47,7 @@ usethis::use_data_raw(name = "imprecision_data", open = FALSE)
 usethis::use_data_raw(name = "eqa_data", open = FALSE)
 usethis::use_data_raw(name = "reference_data", open = FALSE)
 usethis::use_data_raw(name = "comparison_data", open = FALSE)
-usethis::use_data_raw(name = "roc_data", open = FALSE)
+usethis::use_data_raw(name = "diagnostic_data", open = FALSE)
 
 # go to dev/03_deploy.R
 rstudioapi::navigateToFile("dev/03_deploy.R")
