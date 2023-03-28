@@ -20,6 +20,7 @@ Imports:
     pkgload,
     plotly,
     readxl,
+    rlang,
     rlist,
     rmarkdown,
     rstan (>= 2.26.13),
