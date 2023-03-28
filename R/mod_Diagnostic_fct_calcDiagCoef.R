@@ -72,7 +72,7 @@ calcDiagCoef <- function(data
     ,fluidRow(
       valueBox(
         value = coef
-        ,subtitle = paste0("Increase in the odds of ", positive, " given one unit increase in ", col_value)
+        ,subtitle = paste0("Change in the odds of ", positive, " given one unit increase in ", col_value)
         ,color = "blue"
           ,width = width
       )

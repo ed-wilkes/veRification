@@ -66,7 +66,7 @@ plotDCA <- function(data
   performDCA <- function(x, data) {
 
     df_pred <- data %>%
-      dplyr::mutate(prediction = dplyr::if_else(!!sym(col_value) > as.numeric(x[2]), 1, 0))
+      dplyr::mutate(prediction = dplyr::if_else(!!rlang::sym(col_value) > as.numeric(x[2]), 1, 0))
 
     conf_mat <- table(df_pred$prediction, df_pred$outcome_) %>%
       as.data.frame() %>%
