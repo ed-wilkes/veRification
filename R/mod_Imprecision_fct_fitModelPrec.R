@@ -21,24 +21,31 @@ fitModelPrec <- function(data
   require(brms)
 
   if (!is.null(col_level)) {
-    df_filter <- dplyr::filter(data, !!rlang::sym(col_level) == qc_level)
+    df_filter <- dplyr::filter(data, !!rlang::sym(col_level) == qc_level) %>%
+      dplyr::mutate(!!rlang::sym(x_var) := as.factor(!!rlang::sym(x_var))) %>%
+      stats::na.omit()
   } else {
-    df_filter <- data
+    df_filter <- data %>%
+      dplyr::mutate(!!rlang::sym(x_var) := as.factor(!!rlang::sym(x_var))) %>%
+      stats::na.omit()
   }
 
   if (method != "Bayesian") {
 
     form <- as.formula(paste0(y_var, "~", x_var))
-    fit <- VCA::remlVCA(form = form, Data = df_filter, quiet = TRUE)
-    print(fit)
-    print(VCA::VCAinference(fit)$ConfInt$CV)
+    fit <- VCA::remlVCA(form = form, Data = as.data.frame(df_filter), quiet = TRUE)
 
   } else {
 
+    n_cores <- parallel::detectCores()
+    if (n_cores >= 4) {
+      n_cores <- 4
+    }
+
     # Fit model
     form <- as.formula(paste0(y_var, "~ 1 + (1|", x_var, ")"))
-    mean_y <- mean(data[[y_var]])
-    sd_y <- sd(data[[y_var]])
+    mean_y <- mean(df_filter[[y_var]])
+    sd_y <- sd(df_filter[[y_var]])
 
     stanvars <- brms::stanvar(mean_y, name = "mean_y")+
       brms::stanvar(sd_y, name = "sd_y")
@@ -68,7 +75,7 @@ fitModelPrec <- function(data
       )
       ,seed = 1234
       ,iter = 4000
-      ,cores = 4
+      ,cores = n_cores
       ,control = list(adapt_delta = 0.999, max_treedepth = 15)
       ,stanvars = stanvars
       ,refresh = 0

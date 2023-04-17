@@ -65,18 +65,23 @@ fitModelRef <- function(data
 
   }
 
+  n_cores <- parallel::detectCores()
+  if (n_cores >= 4) {
+    n_cores <- 4
+  }
+
   stanvars <- brms::stanvar(sd_y, name = "sd_y")+
     brms::stanvar(prior_location, name = "prior_location")+
     brms::stanvar(prior_scale, name = "prior_scale")
 
   fit <- brms::brm(
     form = form
-    ,data = data
+    ,data = data %>% stats::na.omit()
     ,prior = prior_obj
     ,iter = 20000
     ,control = list(adapt_delta = 0.99)
     ,seed = 123
-    ,cores = 4
+    ,cores = n_cores
     ,refresh = 0
     ,stanvars = stanvars
   )

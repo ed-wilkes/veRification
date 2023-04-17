@@ -27,6 +27,9 @@ fitModelComp <- function(data
     require(brms)
   }
 
+  # Remove NAs
+  data <- stats::na.omit(data)
+
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
     data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
@@ -70,6 +73,11 @@ fitModelComp <- function(data
 
   } else {
 
+    n_cores <- parallel::detectCores()
+    if (n_cores >= 4) {
+      n_cores <- 4
+    }
+
     # Set priors
     sd_y <- sd(data[[value_y1]])
     sd_x <- sd(data[[value_x1]])
@@ -93,7 +101,7 @@ fitModelComp <- function(data
         )
         ,seed = 1234 # for reproducibility
         ,iter = 4000
-        ,cores = 4
+        ,cores = n_cores
         ,refresh = 0
         ,control = list(
           adapt_delta = 0.9999
@@ -119,7 +127,7 @@ fitModelComp <- function(data
 
         ,seed = 1234 # for reproducibility
         ,iter = 4000
-        ,cores = 4
+        ,cores = n_cores
         ,control = list(
           adapt_delta = 0.9999
           ,max_treedepth = 15

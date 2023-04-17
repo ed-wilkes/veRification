@@ -22,6 +22,9 @@ fitModelEQA <- function(data
                         ,method
                         ,settings = NULL) {
 
+  # Remove NA values
+  data <- stats::na.omit(data)
+
   # Average and calculate SD for duplicates if present
   if (!is.null(col_value_2) && col_value_2 != "") {
     data$mean_sample <- apply(data[,c(col_value_1, col_value_2)], 1, mean)
@@ -70,6 +73,11 @@ fitModelEQA <- function(data
     # Load brms to get resp_se() and me() functions
     require(brms)
 
+    n_cores <- parallel::detectCores()
+    if (n_cores >= 4) {
+      n_cores <- 4
+    }
+
     sd_y <- sd(data$mean_sample)
     sd_x <- sd(data[[col_mean]])
     mean_x <- mean(data[[col_mean]])
@@ -93,7 +101,7 @@ fitModelEQA <- function(data
         )
         ,seed = 1234 # for reproducibility
         ,iter = 4000
-        ,cores = 4
+        ,cores = n_cores
         ,refresh = 0
         ,control = list(
           adapt_delta = 0.9999

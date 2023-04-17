@@ -19,6 +19,11 @@ fitModelDiag <- function(data
   # Load brms
   require(brms)
 
+  n_cores <- parallel::detectCores()
+  if (n_cores >= 4) {
+    n_cores <- 4
+  }
+
   # Mutate the outcome variable to integer
   cases <- as.character(unique(data[[col_label]]))
   if (length(cases) > 2) {
@@ -30,7 +35,8 @@ fitModelDiag <- function(data
     dplyr::mutate(
       outcome = dplyr::if_else(!!rlang::sym(col_label) == positive, true = 1, false = 0)
       ,value_centred = !!rlang::sym(col_value) - median(!!rlang::sym(col_value), na.rm = TRUE)
-    )
+    ) %>%
+    stats::na.omit()
 
   # Full measurement error model
   fit <- brms::brm(
@@ -43,7 +49,7 @@ fitModelDiag <- function(data
     )
     ,seed = 1234 # for reproducibility
     ,iter = 4000
-    ,cores = 4
+    ,cores = n_cores
     ,refresh = 0
     ,control = list(
       adapt_delta = 0.9999
