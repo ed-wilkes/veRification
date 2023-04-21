@@ -12,11 +12,11 @@ The app can then be run through the use of the `veRification::run_app()` functio
 Example data for each module can be found within the `veRification/inst/extdata` folder of the package.
 
 ## `rstan` errors
-If you encounter errors such as `Warning: Error in sink: invalid connection`, please download the development versions of the `rstan` and `StanHeaders` packages to your instance of R with the following:
+If you encounter errors such as `Warning: Error in sink: invalid connection`, please download the development versions of the `rstan` and `StanHeaders` packages to your instance of R with the following console commands:
 
-`remove.packages(c("StanHeaders", "rstan"))
+`remove.packages(c("StanHeaders", "rstan"))`
 
-install.packages(c("rstan", "StanHeaders"), repos = c("https://mc-stan.org/r-packages/", getOption("repos")))`
+`install.packages(c("rstan", "StanHeaders"), repos = c("https://mc-stan.org/r-packages/", getOption("repos")))`
 
 ## Citations
 If you find this package useful for your own work, please consider citing the associated publication:
