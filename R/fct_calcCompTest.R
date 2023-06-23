@@ -24,12 +24,12 @@ calcCompTest <- function(data
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "") {
-    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
+    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean, na.rm = TRUE)
     value_x1 <- "mean_x"
   }
 
   if (!is.null(value_y2) && value_y2 != "") {
-    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
+    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean, na.rm = TRUE)
     value_y1 <- "mean_y"
   }
 
@@ -44,8 +44,8 @@ calcCompTest <- function(data
         ,paired = TRUE
         ,conf.level = ci_interval / 100
       )
-      centre_x <- mean(data[[value_x1]])
-      centre_y <- mean(data[[value_y1]])
+      centre_x <- mean(data[[value_x1]], na.rm = TRUE)
+      centre_y <- mean(data[[value_y1]], na.rm = TRUE)
       centre_value <- "Mean"
 
     } else if (method == "Paired Wilcoxon (Mann-Whitney) test" ) {
@@ -56,8 +56,8 @@ calcCompTest <- function(data
         ,paired = TRUE
         ,conf.level = ci_interval / 100
       )
-      centre_x <- median(data[[value_x1]])
-      centre_y <- median(data[[value_y1]])
+      centre_x <- median(data[[value_x1]], na.rm = TRUE)
+      centre_y <- median(data[[value_y1]], na.rm = TRUE)
       centre_value <- "Median"
 
     }

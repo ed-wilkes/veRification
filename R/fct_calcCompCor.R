@@ -24,12 +24,12 @@ calcCompCor <- function(data
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "") {
-    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
+    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean, na.rm = TRUE)
     value_x1 <- "mean_x"
   }
 
   if (!is.null(value_y2) && value_y2 != "") {
-    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
+    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean, na.rm = TRUE)
     value_y1 <- "mean_y"
   }
 

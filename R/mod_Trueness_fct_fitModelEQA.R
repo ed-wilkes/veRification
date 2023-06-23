@@ -27,8 +27,8 @@ fitModelEQA <- function(data
 
   # Average and calculate SD for duplicates if present
   if (!is.null(col_value_2) && col_value_2 != "") {
-    data$mean_sample <- apply(data[,c(col_value_1, col_value_2)], 1, mean)
-    data$sd_sample <- apply(data[,c(col_value_1, col_value_2)], 1, sd)
+    data$mean_sample <- apply(data[,c(col_value_1, col_value_2)], 1, mean, na.rm = TRUE)
+    data$sd_sample <- apply(data[,c(col_value_1, col_value_2)], 1, sd, na.rm = TRUE)
     data$sd_sample[which(data$sd_sample == 0)] <- min(data$sd_sample[data$sd_sample > 0]) # replace zeros with arbitrarily minimum value
   } else {
     data$mean_sample <- data[[col_value_1]]
@@ -78,9 +78,9 @@ fitModelEQA <- function(data
       n_cores <- 4
     }
 
-    sd_y <- sd(data$mean_sample)
-    sd_x <- sd(data[[col_mean]])
-    mean_x <- mean(data[[col_mean]])
+    sd_y <- sd(data$mean_sample, na.rm = TRUE)
+    sd_x <- sd(data[[col_mean]], na.rm = TRUE)
+    mean_x <- mean(data[[col_mean]], na.rm = TRUE)
     stanvars <- brms::stanvar(sd_y, name = "sd_y") + brms::stanvar(sd_x, name = "sd_x") + brms::stanvar(mean_x, name = "mean_x")
     data$mean <- data[[col_mean]] # this is lazy, but simplifies the call to me() within brms
     data$sd <- data[[col_var]] # this is lazy, but simplifies the call to me() within brms

@@ -43,7 +43,7 @@ fitModelRef <- function(data
     ) %>%
       dplyr::mutate(Distribution = "data")
 
-    sd_y <- sd(data$value)
+    sd_y <- sd(data$value, na.rm = TRUE)
     form <- paste0("value ~ 1 + (1|", col_sample, ")") # includes duplicates as varying effects
 
     prior_obj <- c(
@@ -54,7 +54,7 @@ fitModelRef <- function(data
 
   } else {
 
-    sd_y <- sd(data[[col_value_1]])
+    sd_y <- sd(data[[col_value_1]], na.rm = TRUE)
     data$value <- data[[col_value_1]]
     form <- "value ~ 1"
 

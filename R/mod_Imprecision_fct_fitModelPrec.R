@@ -44,8 +44,8 @@ fitModelPrec <- function(data
 
     # Fit model
     form <- as.formula(paste0(y_var, "~ 1 + (1|", x_var, ")"))
-    mean_y <- mean(df_filter[[y_var]])
-    sd_y <- sd(df_filter[[y_var]])
+    mean_y <- mean(df_filter[[y_var]], na.rm = TRUE)
+    sd_y <- sd(df_filter[[y_var]], na.rm = TRUE)
 
     stanvars <- brms::stanvar(mean_y, name = "mean_y")+
       brms::stanvar(sd_y, name = "sd_y")

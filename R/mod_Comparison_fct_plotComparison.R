@@ -30,10 +30,10 @@ plotComparison <- function(data
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
-    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
-    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
-    data$sd_x <- apply(data[,c(value_x1, value_x2)], 1, sd)
-    data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd)
+    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean, na.rm = TRUE)
+    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean, na.rm = TRUE)
+    data$sd_x <- apply(data[,c(value_x1, value_x2)], 1, sd, na.rm = TRUE)
+    data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd, na.rm = TRUE)
     value_x1 <- "mean_x"
     value_y1 <- "mean_y"
     brms_str_1 <- "bsp_me"

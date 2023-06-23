@@ -32,10 +32,10 @@ fitModelComp <- function(data
 
   # Average duplicates if present
   if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
-    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean)
-    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean)
-    data$sd_x <- apply(data[,c(value_x1, value_x2)], 1 , sd)
-    data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd)
+    data$mean_x <- apply(data[,c(value_x1, value_x2)], 1, mean, na.rm = TRUE)
+    data$mean_y <- apply(data[,c(value_y1, value_y2)], 1, mean, na.rm = TRUE)
+    data$sd_x <- apply(data[,c(value_x1, value_x2)], 1 , sd, na.rm = TRUE)
+    data$sd_y <- apply(data[,c(value_y1, value_y2)], 1, sd, na.rm = TRUE)
     data$sd_x[which(data$sd_x == 0)] <- min(data$sd_x[data$sd_x > 0]) # replace zeros with arbitrarily minimum value
     data$sd_y[which(data$sd_y == 0)] <- min(data$sd_y[data$sd_y > 0]) # replace zeros with arbitrarily minimum value
     value_x1 <- "mean_x"
@@ -79,13 +79,13 @@ fitModelComp <- function(data
     }
 
     # Set priors
-    sd_y <- sd(data[[value_y1]])
-    sd_x <- sd(data[[value_x1]])
+    sd_y <- sd(data[[value_y1]], na.rm = TRUE)
+    sd_x <- sd(data[[value_x1]], na.rm = TRUE)
     stanvars <- brms::stanvar(sd_y, name = "sd_y") + brms::stanvar(sd_x, name = "sd_x")
 
     if (!is.null(value_x2) && value_x2 != "" && !is.null(value_y2) && value_y2 != "") {
 
-      mean_x <- mean(data[[value_x1]])
+      mean_x <- mean(data[[value_x1]], na.rm = TRUE)
       stanvars <- stanvars + brms::stanvar(mean_x, name = "mean_x")
 
       # Full measurement error model
