@@ -127,7 +127,7 @@ plotEQA <- function(data
           x = mean
           ,y = mean_sample
           ,text = paste0(
-            "EQA value: ", round(mean, 2), "\n"
+            "EQA value: ", round(!!rlang::sym(col_mean), 2), "\n"
             ,"Measured value: ", round(mean_sample, 2)
           )
         )
@@ -144,7 +144,7 @@ plotEQA <- function(data
 
       p <- p + ggplot2::geom_errorbar(
         data = data
-        ,ggplot2::aes(x = mean, ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
+        ,ggplot2::aes(x = !!rlang::sym(col_mean), ymin = mean_sample - sd_sample, ymax = mean_sample + sd_sample)
         ,width = 0
         ,alpha = 0.5
       )
