@@ -66,7 +66,7 @@ plotEQA <- function(data
         alpha = 0.5
         ,ggplot2::aes(
           text = paste0(
-            "EQA value: ", round(mean, 2), "\n"
+            "EQA value: ", round(!!rlang::sym(col_mean), 2), "\n"
             ,"Measured value: ", round(mean_sample, 2)
           )
         )
