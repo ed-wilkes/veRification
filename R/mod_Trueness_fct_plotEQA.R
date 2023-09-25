@@ -124,7 +124,7 @@ plotEQA <- function(data
       ggplot2::geom_point(
         data = data
         ,ggplot2::aes(
-          x = mean
+          x = !!rlang::sym(col_mean)
           ,y = mean_sample
           ,text = paste0(
             "EQA value: ", round(!!rlang::sym(col_mean), 2), "\n"
